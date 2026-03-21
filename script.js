@@ -141,42 +141,53 @@ function doSearch() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     
-    xhr.onload = function() {
-        if (resultsEl) {
-            if (xhr.status === 200) {
-                var data = JSON.parse(xhr.responseText);
-                resultsEl.innerHTML = '';
-                if (!data.items || data.items.length === 0) {
-                    resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:1.5rem;">No results found</div>';
-                    return;
-                }
+    // Set a timeout manually for better compatibility
+    var searchTimer = setTimeout(function() {
+        if (xhr.readyState < 4) {
+            xhr.abort();
+            if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">Search timed out. Check connection.</div>';
+        }
+    }, 15000); // 15 seconds
 
-                for (var i = 0; i < data.items.length; i++) {
-                    var item = data.items[i];
-                    var id = item.id.videoId;
-                    var title = item.snippet.title;
-                    var author = item.snippet.channelTitle;
-                    var thumb = item.snippet.thumbnails.medium.url;
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            clearTimeout(searchTimer);
+            if (resultsEl) {
+                if (xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        resultsEl.innerHTML = '';
+                        if (!data.items || data.items.length === 0) {
+                            resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:1.5rem;">No results found</div>';
+                            return;
+                        }
 
-                    var div = document.createElement('div');
-                    div.className = 'search-item';
-                    div.setAttribute('onclick', 'playRadio("' + id + '")');
-                    div.innerHTML = 
-                        '<img src="' + thumb + '">' +
-                        '<div class="search-item-info">' +
-                            '<div class="search-item-title">' + escHtml(title) + '</div>' +
-                            '<div class="search-item-author">' + escHtml(author) + '</div>' +
-                        '</div>';
-                    resultsEl.appendChild(div);
+                        for (var i = 0; i < data.items.length; i++) {
+                            var item = data.items[i];
+                            var id = item.id.videoId;
+                            var title = item.snippet.title;
+                            var author = item.snippet.channelTitle;
+                            var thumb = item.snippet.thumbnails.medium.url;
+
+                            var div = document.createElement('div');
+                            div.className = 'search-item';
+                            div.setAttribute('onclick', 'playRadio("' + id + '")');
+                            div.innerHTML = 
+                                '<img src="' + thumb + '">' +
+                                '<div class="search-item-info">' +
+                                    '<div class="search-item-title">' + escHtml(title) + '</div>' +
+                                    '<div class="search-item-author">' + escHtml(author) + '</div>' +
+                                '</div>';
+                            resultsEl.appendChild(div);
+                        }
+                    } catch(e) {
+                        resultsEl.innerHTML = '<div style="color:red; text-align:center;">Parse error: ' + e.message + '</div>';
+                    }
+                } else {
+                    resultsEl.innerHTML = '<div style="color:red; text-align:center; font-size:1.5rem;">Search failed: Status ' + xhr.status + '</div>';
                 }
-            } else {
-                resultsEl.innerHTML = '<div style="color:red; text-align:center; font-size:1.5rem;">Search failed: Status ' + xhr.status + '</div>';
             }
         }
-    };
-
-    xhr.onerror = function() {
-        if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">Network Error during Search</div>';
     };
 
     xhr.send();
@@ -228,13 +239,15 @@ function syncWeather() {
     var url = 'https://api.open-meteo.com/v1/forecast?latitude=21.3069&longitude=-157.8583&current_weather=true&temperature_unit=fahrenheit';
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-            var data = JSON.parse(xhr.responseText);
-            var w = data.current_weather;
-            if (w) {
-                weatherEl.innerText = Math.round(w.temperature) + "°F " + getWeatherEmoji(w.weathercode);
-            }
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                var w = data.current_weather;
+                if (w) {
+                    weatherEl.innerText = Math.round(w.temperature) + "°F " + getWeatherEmoji(w.weathercode);
+                }
+            } catch(e) {}
         }
     };
     xhr.send();
