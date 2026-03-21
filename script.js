@@ -104,7 +104,23 @@ function toggleOrientation() {
     } catch(e) {}
 }
 
+function saveApiKey() {
+    var key = document.getElementById('settings-api-key').value.trim();
+    if (!key) {
+        alert("Please enter a valid API Key.");
+        return;
+    }
+    try {
+        localStorage.setItem('yt_api_key', key);
+        alert("API Key saved! Please refresh or try searching again.");
+        location.reload(); // Reload to apply the key globally
+    } catch(e) {
+        alert("Error saving to localStorage: " + e.message);
+    }
+}
+
 function applySettings() {
+    // 1. Driver Orientation
     var orientation = 'left';
     try {
         orientation = localStorage.getItem('driverOrientation') || 'left';
@@ -116,6 +132,16 @@ function applySettings() {
         if (uiLayer) uiLayer.classList.add('driver-right');
         if (btn) btn.innerText = "RIGHT (RHD)";
     }
+
+    // 2. Load API Key into global variable if missing
+    try {
+        var savedKey = localStorage.getItem('yt_api_key');
+        if (savedKey) {
+            window.YT_API_KEY = savedKey;
+            var keyInput = document.getElementById('settings-api-key');
+            if (keyInput) keyInput.value = savedKey;
+        }
+    } catch(e) {}
 }
 
 // ── Search Logic ──
@@ -128,15 +154,17 @@ function doSearch() {
     var resultsEl = document.getElementById('search-results');
     if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:2rem;">Searching...</div>';
 
-    // Verify API Key
-    if (typeof YT_API_KEY === 'undefined' || !YT_API_KEY) {
-        alert("CRITICAL ERROR: YT_API_KEY is not defined. Please check config.js.");
-        if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">API Key missing</div>';
+    // Verify API Key (Check global or window scope)
+    var activeKey = (typeof YT_API_KEY !== 'undefined') ? YT_API_KEY : window.YT_API_KEY;
+
+    if (!activeKey) {
+        alert("YT_API_KEY is not defined. Please enter it in Settings.");
+        if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">API Key missing. Check Settings.</div>';
         return;
     }
 
     var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=' + 
-              encodeURIComponent(query) + '&type=video&videoEmbeddable=true&maxResults=10&key=' + YT_API_KEY;
+              encodeURIComponent(query) + '&type=video&videoEmbeddable=true&maxResults=10&key=' + activeKey;
 
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);

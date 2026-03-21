@@ -21,7 +21,7 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag" style="position: fixed; bottom: 5px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.2); z-index: 1000; font-family: monospace;">v1.2.6 (2026-03-21 12:25 HST)</div>
+        <div id="version-tag" style="position: fixed; bottom: 5px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.2); z-index: 1000; font-family: monospace;">v1.3.0 (2026-03-21 12:35 HST)</div>
         
         <!-- Sidebar (Driver Side) -->
         <div id="sidebar">
@@ -69,9 +69,17 @@
     <!-- Settings Overlay -->
     <div id="overlay-settings" class="overlay">
         <div class="close-btn" onclick="closeAllOverlays()">&#x2715;</div>
-        <h1 style="font-size:3rem; margin-bottom:40px; color:var(--accent-color);">Settings</h1>
+        <h1 style="font-size:3rem; margin-bottom:20px; color:var(--accent-color);">Settings</h1>
         
-        <div style="width:100%; max-width:600px; display:flex; flex-direction:column; gap:30px;">
+        <div style="width:100%; max-width:600px; display:flex; flex-direction:column; gap:20px;">
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font-size:1.2rem; opacity:0.7;">YouTube API Key</span>
+                <input type="password" id="settings-api-key" placeholder="Paste API Key here..." style="background:#222; border:2px solid #444; color:white; padding:15px; border-radius:10px; font-size:1.2rem;">
+                <button onclick="saveApiKey()" style="background:var(--accent-color); color:black; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem;">SAVE KEY</button>
+            </div>
+
+            <hr style="width:100%; border:0; border-top:1px solid #333; margin:10px 0;">
+
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:1.5rem;">Driver Orientation</span>
                 <button id="btn-orientation" onclick="toggleOrientation()" style="background:#333; color:white; border:none; padding:15px 30px; border-radius:10px; font-size:1.2rem; width:180px;">LEFT (LHD)</button>
