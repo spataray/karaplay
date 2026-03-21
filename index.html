@@ -21,10 +21,11 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag" style="position: fixed; bottom: 5px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.2); z-index: 1000; font-family: monospace;">v1.0.3 (2026-03-21 11:35 HST)</div>
+        <div id="version-tag" style="position: fixed; bottom: 5px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.2); z-index: 1000; font-family: monospace;">v1.1.0 (2026-03-21 11:45 HST)</div>
         
-        <!-- Left Sidebar (Driver Side) -->
+        <!-- Sidebar (Driver Side) -->
         <div id="sidebar">
+            <div class="side-btn" id="sidebar-btn-play" onclick="togglePlay()" title="Play/Pause">&#9654;</div>
             <div class="side-btn" onclick="openOverlay('overlay-search')" title="Search">&#128269;</div>
             <div class="side-btn" onclick="openOverlay('overlay-settings')" title="Settings">&#9881;</div>
         </div>
@@ -50,7 +51,6 @@
             </div>
             <div class="media-controls">
                 <button class="media-btn" onclick="prevTrack()">&#9198;</button>
-                <button class="media-btn" id="btn-play" onclick="togglePlay()">&#9654;</button>
                 <button class="media-btn" onclick="nextTrack()">&#9197;</button>
             </div>
         </div>
@@ -72,6 +72,10 @@
         <h1 style="font-size:3rem; margin-bottom:40px; color:var(--accent-color);">Settings</h1>
         
         <div style="width:100%; max-width:600px; display:flex; flex-direction:column; gap:30px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:1.5rem;">Driver Orientation</span>
+                <button id="btn-orientation" onclick="toggleOrientation()" style="background:#333; color:white; border:none; padding:15px 30px; border-radius:10px; font-size:1.2rem; width:180px;">LEFT (LHD)</button>
+            </div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:1.5rem;">Night Mode (Dimmer)</span>
                 <input type="checkbox" style="width:40px; height:40px;">

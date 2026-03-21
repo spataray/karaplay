@@ -70,21 +70,46 @@ function updateTrackInfo() {
     var data = player.getVideoData();
     document.getElementById('track-title').innerText = data.title || "Unknown Title";
     document.getElementById('track-author').innerText = data.author || "Unknown Artist";
-}
-
 // ── Media Controls ──
 function togglePlay() {
     var state = player.getPlayerState();
+    var playBtn = document.getElementById('sidebar-btn-play');
     if (state === 1) {
         player.pauseVideo();
-        document.getElementById('btn-play').innerHTML = "&#9654;";
+        playBtn.innerHTML = "&#9654;";
     } else {
         player.playVideo();
-        document.getElementById('btn-play').innerHTML = "&#9208;";
+        playBtn.innerHTML = "&#9208;";
+    }
+}
+
+// ── Settings & Orientation ──
+function toggleOrientation() {
+    var uiLayer = document.getElementById('ui-layer');
+    var btn = document.getElementById('btn-orientation');
+    var isRight = uiLayer.classList.toggle('driver-right');
+
+    if (isRight) {
+        btn.innerText = "RIGHT (RHD)";
+        localStorage.setItem('driverOrientation', 'right');
+    } else {
+        btn.innerText = "LEFT (LHD)";
+        localStorage.setItem('driverOrientation', 'left');
+    }
+}
+
+function applySettings() {
+    var orientation = localStorage.getItem('driverOrientation');
+    if (orientation === 'right') {
+        document.getElementById('ui-layer').classList.add('driver-right');
+        document.getElementById('btn-orientation').innerText = "RIGHT (RHD)";
     }
 }
 
 function nextTrack() {
+...
+}
+
     player.nextVideo();
 }
 
@@ -189,6 +214,7 @@ function getWeatherEmoji(code) {
 }
 
 // ── Init ──
+applySettings();
 updateClock();
 setInterval(updateClock, 1000);
 syncWeather();
