@@ -128,13 +128,21 @@ function doSearch() {
     var resultsEl = document.getElementById('search-results');
     if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:2rem;">Searching...</div>';
 
+    // Verify API Key
+    if (typeof YT_API_KEY === 'undefined' || !YT_API_KEY) {
+        alert("CRITICAL ERROR: YT_API_KEY is not defined. Please check config.js.");
+        if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">API Key missing</div>';
+        return;
+    }
+
     var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=' + 
               encodeURIComponent(query) + '&type=video&videoEmbeddable=true&maxResults=10&key=' + YT_API_KEY;
 
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4 && resultsEl) {
+    
+    xhr.onload = function() {
+        if (resultsEl) {
             if (xhr.status === 200) {
                 var data = JSON.parse(xhr.responseText);
                 resultsEl.innerHTML = '';
@@ -162,10 +170,15 @@ function doSearch() {
                     resultsEl.appendChild(div);
                 }
             } else {
-                resultsEl.innerHTML = '<div style="color:red; text-align:center; font-size:1.5rem;">Search failed</div>';
+                resultsEl.innerHTML = '<div style="color:red; text-align:center; font-size:1.5rem;">Search failed: Status ' + xhr.status + '</div>';
             }
         }
     };
+
+    xhr.onerror = function() {
+        if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">Network Error during Search</div>';
+    };
+
     xhr.send();
 }
 
@@ -215,8 +228,8 @@ function syncWeather() {
     var url = 'https://api.open-meteo.com/v1/forecast?latitude=21.3069&longitude=-157.8583&current_weather=true&temperature_unit=fahrenheit';
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4 && xhr.status === 200) {
+    xhr.onload = function() {
+        if (xhr.status === 200) {
             var data = JSON.parse(xhr.responseText);
             var w = data.current_weather;
             if (w) {
