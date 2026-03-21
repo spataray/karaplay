@@ -21,7 +21,7 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag" style="position: fixed; bottom: 5px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.2); z-index: 1000; font-family: monospace;">v1.3.1 (2026-03-21 12:42 HST)</div>
+        <div id="version-tag" style="position: fixed; bottom: 5px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.2); z-index: 1000; font-family: monospace;">v1.4.0 (2026-03-21 13:05 HST)</div>
         
         <!-- Sidebar (Driver Side) -->
         <div id="sidebar">
@@ -75,7 +75,10 @@
             <div style="display:flex; flex-direction:column; gap:10px;">
                 <span style="font-size:1.2rem; opacity:0.7;">YouTube API Key</span>
                 <input type="password" id="settings-api-key" placeholder="Paste API Key here..." style="background:#222; border:2px solid #444; color:white; padding:15px; border-radius:10px; font-size:1.2rem;">
-                <button onclick="saveApiKey()" style="background:var(--accent-color); color:black; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem;">SAVE KEY</button>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="saveApiKey()" style="flex:1; background:var(--accent-color); color:black; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem;">SAVE KEY</button>
+                    <button onclick="openOverlay('overlay-sync')" style="flex:1; background:#444; color:white; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem;">REMOTE SYNC</button>
+                </div>
             </div>
 
             <hr style="width:100%; border:0; border-top:1px solid #333; margin:10px 0;">
@@ -99,7 +102,28 @@
         </div>
     </div>
 
+    <!-- Remote Sync Overlay -->
+    <div id="overlay-sync" class="overlay">
+        <div class="close-btn" onclick="closeAllOverlays()">&#x2715;</div>
+        <h1 style="font-size:3rem; margin-bottom:20px; color:var(--accent-color);">Remote Sync</h1>
+        <div id="sync-receiver-ui" style="text-align:center; display:none;">
+            <p style="font-size:1.5rem; margin-bottom:30px;">Go to this URL on your phone:<br><b id="sync-url-display" style="color:var(--accent-color);">--</b></p>
+            <div id="sync-code-display" style="font-size:6rem; font-weight:900; background:#222; padding:20px 50px; border-radius:20px; border:4px dashed var(--accent-color); display:inline-block; margin-bottom:30px;">----</div>
+            <p style="opacity:0.7; font-size:1.2rem;">Waiting for your phone to send the key...</p>
+        </div>
+        
+        <div id="sync-sender-ui" style="text-align:center; display:none; width:100%; max-width:600px;">
+            <p style="font-size:1.5rem; margin-bottom:20px;">Enter the code shown on your car:</p>
+            <input type="number" id="sync-input-code" placeholder="4-Digit Code" style="width:100%; background:#222; border:2px solid #444; color:white; padding:20px; border-radius:10px; font-size:3rem; text-align:center; margin-bottom:30px;">
+            <p style="font-size:1.5rem; margin-bottom:10px;">Paste your API Key here:</p>
+            <textarea id="sync-input-key" placeholder="AIza..." style="width:100%; height:120px; background:#222; border:2px solid #444; color:white; padding:20px; border-radius:10px; font-size:1.2rem; margin-bottom:30px;"></textarea>
+            <button onclick="sendSyncKey()" style="width:100%; background:var(--accent-color); color:black; border:none; padding:25px; border-radius:15px; font-weight:bold; font-size:1.5rem;">SEND TO CAR</button>
+        </div>
+    </div>
+
     <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="config.js"></script>
     <script src="script.js"></script>

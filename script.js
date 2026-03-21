@@ -3,6 +3,7 @@
 var player;
 var playerReady = false;
 var currentVideoId = "";
+var syncDatabase;
 
 // ── YouTube API Setup ──
 function onYouTubeIframeAPIReady() {
@@ -126,7 +127,6 @@ function applySettings() {
         try {
             localStorage.setItem('yt_api_key', urlKey);
             alert("API Key detected in URL and saved!");
-            // Redirect to clean URL
             var cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
             window.location.href = cleanUrl;
             return;
@@ -155,6 +155,78 @@ function applySettings() {
             if (keyInput) keyInput.value = savedKey;
         }
     } catch(e) {}
+}
+
+// ── Remote Sync Logic ──
+function initSync() {
+    if (typeof firebase === 'undefined' || typeof firebaseConfig === 'undefined') {
+        console.warn("Firebase not available for sync.");
+        return;
+    }
+    firebase.initializeApp(firebaseConfig);
+    syncDatabase = firebase.database();
+}
+
+function startSyncReceiver() {
+    initSync();
+    if (!syncDatabase) return;
+
+    var code = Math.floor(1000 + Math.random() * 9000).toString();
+    document.getElementById('sync-code-display').innerText = code;
+    document.getElementById('sync-receiver-ui').style.display = 'block';
+    
+    var baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+    document.getElementById('sync-url-display').innerText = baseUrl + "?sync";
+
+    var syncRef = syncDatabase.ref('sync/' + code);
+    syncRef.on('value', function(snapshot) {
+        var data = snapshot.val();
+        if (data && data.key) {
+            localStorage.setItem('yt_api_key', data.key);
+            syncRef.remove(); // Cleanup
+            alert("Key received from phone! Karaplay will now reload.");
+            location.reload();
+        }
+    });
+}
+
+function sendSyncKey() {
+    initSync();
+    if (!syncDatabase) {
+        alert("Sync service unavailable.");
+        return;
+    }
+
+    var code = document.getElementById('sync-input-code').value.trim();
+    var key = document.getElementById('sync-input-key').value.trim();
+
+    if (code.length !== 4 || !key) {
+        alert("Please enter a 4-digit code and the API key.");
+        return;
+    }
+
+    syncDatabase.ref('sync/' + code).set({
+        key: key,
+        timestamp: Date.now()
+    }, function(error) {
+        if (error) {
+            alert("Error sending key: " + error.message);
+        } else {
+            alert("Key sent successfully! Check your car screen.");
+        }
+    });
+}
+
+function checkSyncMode() {
+    var isSender = getQueryParam('sync') !== null;
+    if (isSender) {
+        openOverlay('overlay-sync');
+        document.getElementById('sync-sender-ui').style.display = 'block';
+        document.getElementById('sync-receiver-ui').style.display = 'none';
+        // Hide UI elements to keep it clean
+        var ui = document.getElementById('ui-layer');
+        if (ui) ui.style.display = 'none';
+    }
 }
 
 function getQueryParam(name) {
@@ -241,11 +313,19 @@ function doSearch() {
 function openOverlay(id) {
     var el = document.getElementById(id);
     if (el) el.classList.add('active');
+    
     if (id === 'overlay-search') {
         setTimeout(function() { 
             var si = document.getElementById('search-input');
             if (si) si.focus(); 
         }, 200);
+    }
+
+    if (id === 'overlay-sync') {
+        // Only start receiver if not already in sender mode
+        if (getQueryParam('sync') === null) {
+            startSyncReceiver();
+        }
     }
 }
 
@@ -306,6 +386,7 @@ function getWeatherEmoji(code) {
 
 // ── Init ──
 applySettings();
+checkSyncMode();
 updateClock();
 setInterval(updateClock, 1000);
 syncWeather();
