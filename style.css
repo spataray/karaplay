@@ -208,8 +208,8 @@ iframe {
 
 .close-btn {
     position: absolute;
-    top: 60px;
-    right: 80px;
+    top: 80px;
+    right: 120px;
     width: 100px;
     height: 100px;
     font-size: 4rem;
@@ -236,7 +236,7 @@ iframe {
 #ui-layer.driver-right ~ .overlay .close-btn,
 #ui-layer.driver-right ~ .close-btn {
     right: auto;
-    left: 80px;
+    left: 120px;
 }
 
 #search-input {

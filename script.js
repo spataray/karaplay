@@ -112,15 +112,28 @@ function saveApiKey() {
     }
     try {
         localStorage.setItem('yt_api_key', key);
-        alert("API Key saved! Please refresh or try searching again.");
-        location.reload(); // Reload to apply the key globally
+        alert("API Key saved! Page will reload.");
+        location.reload();
     } catch(e) {
-        alert("Error saving to localStorage: " + e.message);
+        alert("Error saving: " + e.message);
     }
 }
 
 function applySettings() {
-    // 1. Driver Orientation
+    // 1. URL Parameter Sync (Priority)
+    var urlKey = getQueryParam('key');
+    if (urlKey && urlKey.length > 10) {
+        try {
+            localStorage.setItem('yt_api_key', urlKey);
+            alert("API Key detected in URL and saved!");
+            // Redirect to clean URL
+            var cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.location.href = cleanUrl;
+            return;
+        } catch(e) {}
+    }
+
+    // 2. Driver Orientation
     var orientation = 'left';
     try {
         orientation = localStorage.getItem('driverOrientation') || 'left';
@@ -133,7 +146,7 @@ function applySettings() {
         if (btn) btn.innerText = "RIGHT (RHD)";
     }
 
-    // 2. Load API Key into global variable if missing
+    // 3. Load API Key
     try {
         var savedKey = localStorage.getItem('yt_api_key');
         if (savedKey) {
@@ -142,6 +155,12 @@ function applySettings() {
             if (keyInput) keyInput.value = savedKey;
         }
     } catch(e) {}
+}
+
+function getQueryParam(name) {
+    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+    if (results == null) return null;
+    return decodeURIComponent(results[1]) || 0;
 }
 
 // ── Search Logic ──
@@ -154,12 +173,11 @@ function doSearch() {
     var resultsEl = document.getElementById('search-results');
     if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:2rem;">Searching...</div>';
 
-    // Verify API Key (Check global or window scope)
     var activeKey = (typeof YT_API_KEY !== 'undefined') ? YT_API_KEY : window.YT_API_KEY;
 
     if (!activeKey) {
-        alert("YT_API_KEY is not defined. Please enter it in Settings.");
-        if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">API Key missing. Check Settings.</div>';
+        alert("YouTube API Key is missing. Add it in Settings or via URL (?key=...)");
+        if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">API Key missing.</div>';
         return;
     }
 
@@ -169,13 +187,12 @@ function doSearch() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     
-    // Set a timeout manually for better compatibility
     var searchTimer = setTimeout(function() {
         if (xhr.readyState < 4) {
             xhr.abort();
-            if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">Search timed out. Check connection.</div>';
+            if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">Search timed out.</div>';
         }
-    }, 15000); // 15 seconds
+    }, 15000);
 
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
@@ -209,15 +226,14 @@ function doSearch() {
                             resultsEl.appendChild(div);
                         }
                     } catch(e) {
-                        resultsEl.innerHTML = '<div style="color:red; text-align:center;">Parse error: ' + e.message + '</div>';
+                        resultsEl.innerHTML = '<div style="color:red; text-align:center;">Parse error.</div>';
                     }
                 } else {
-                    resultsEl.innerHTML = '<div style="color:red; text-align:center; font-size:1.5rem;">Search failed: Status ' + xhr.status + '</div>';
+                    resultsEl.innerHTML = '<div style="color:red; text-align:center;">Error: ' + xhr.status + '</div>';
                 }
             }
         }
     };
-
     xhr.send();
 }
 
