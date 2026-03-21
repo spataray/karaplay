@@ -70,6 +70,8 @@ function updateTrackInfo() {
     var data = player.getVideoData();
     document.getElementById('track-title').innerText = data.title || "Unknown Title";
     document.getElementById('track-author').innerText = data.author || "Unknown Artist";
+}
+
 // ── Media Controls ──
 function togglePlay() {
     var state = player.getPlayerState();
@@ -81,6 +83,14 @@ function togglePlay() {
         player.playVideo();
         playBtn.innerHTML = "&#9208;";
     }
+}
+
+function nextTrack() {
+    player.nextVideo();
+}
+
+function prevTrack() {
+    player.previousVideo();
 }
 
 // ── Settings & Orientation ──
@@ -101,20 +111,11 @@ function toggleOrientation() {
 function applySettings() {
     var orientation = localStorage.getItem('driverOrientation');
     if (orientation === 'right') {
-        document.getElementById('ui-layer').classList.add('driver-right');
-        document.getElementById('btn-orientation').innerText = "RIGHT (RHD)";
+        var uiLayer = document.getElementById('ui-layer');
+        var btn = document.getElementById('btn-orientation');
+        if (uiLayer) uiLayer.classList.add('driver-right');
+        if (btn) btn.innerText = "RIGHT (RHD)";
     }
-}
-
-function nextTrack() {
-...
-}
-
-    player.nextVideo();
-}
-
-function prevTrack() {
-    player.previousVideo();
 }
 
 // ── Search Logic ──
