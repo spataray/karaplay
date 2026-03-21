@@ -31,19 +31,13 @@ function onPlayerReady(event) {
 }
 
 function onPlayerStateChange(event) {
-    // YT.PlayerState.PLAYING = 1
-    if (event.data === 1) {
+    if (event.data === 1) { // YT.PlayerState.PLAYING
         updateTrackInfo();
-    }
-    // YT.PlayerState.ENDED = 0
-    if (event.data === 0) {
-        // Radio mode should handle next automatically if loaded as playlist
     }
 }
 
 function onPlayerError(event) {
     console.warn("Player Error:", event.data);
-    // Skip to next if possible
     if (player && player.nextVideo) player.nextVideo();
 }
 
@@ -52,7 +46,6 @@ function playRadio(videoId) {
     if (!playerReady) return;
     currentVideoId = videoId;
     
-    // Loading with 'RD' + videoId triggers the YouTube Mix algorithm
     player.loadPlaylist({
         list: 'RD' + videoId,
         listType: 'playlist',
@@ -68,20 +61,23 @@ function playRadio(videoId) {
 function updateTrackInfo() {
     if (!player || !player.getVideoData) return;
     var data = player.getVideoData();
-    document.getElementById('track-title').innerText = data.title || "Unknown Title";
-    document.getElementById('track-author').innerText = data.author || "Unknown Artist";
+    var titleEl = document.getElementById('track-title');
+    var authorEl = document.getElementById('track-author');
+    if (titleEl) titleEl.innerText = data.title || "Unknown Title";
+    if (authorEl) authorEl.innerText = data.author || "Unknown Artist";
 }
 
 // ── Media Controls ──
 function togglePlay() {
+    if (!player || !player.getPlayerState) return;
     var state = player.getPlayerState();
     var playBtn = document.getElementById('sidebar-btn-play');
-    if (state === 1) {
+    if (state === 1) { // Playing
         player.pauseVideo();
-        playBtn.innerHTML = "&#9654;";
+        if (playBtn) playBtn.innerHTML = "&#9654;";
     } else {
         player.playVideo();
-        playBtn.innerHTML = "&#9208;";
+        if (playBtn) playBtn.innerHTML = "&#9208;";
     }
 }
 
@@ -97,19 +93,23 @@ function prevTrack() {
 function toggleOrientation() {
     var uiLayer = document.getElementById('ui-layer');
     var btn = document.getElementById('btn-orientation');
+    if (!uiLayer || !btn) return;
+    
     var isRight = uiLayer.classList.toggle('driver-right');
-
-    if (isRight) {
-        btn.innerText = "RIGHT (RHD)";
-        localStorage.setItem('driverOrientation', 'right');
-    } else {
-        btn.innerText = "LEFT (LHD)";
-        localStorage.setItem('driverOrientation', 'left');
-    }
+    var val = isRight ? 'right' : 'left';
+    btn.innerText = isRight ? "RIGHT (RHD)" : "LEFT (LHD)";
+    
+    try {
+        localStorage.setItem('driverOrientation', val);
+    } catch(e) {}
 }
 
 function applySettings() {
-    var orientation = localStorage.getItem('driverOrientation');
+    var orientation = 'left';
+    try {
+        orientation = localStorage.getItem('driverOrientation') || 'left';
+    } catch(e) {}
+
     if (orientation === 'right') {
         var uiLayer = document.getElementById('ui-layer');
         var btn = document.getElementById('btn-orientation');
@@ -120,11 +120,13 @@ function applySettings() {
 
 // ── Search Logic ──
 function doSearch() {
-    var query = document.getElementById('search-input').value.trim();
+    var input = document.getElementById('search-input');
+    if (!input) return;
+    var query = input.value.trim();
     if (!query) return;
 
     var resultsEl = document.getElementById('search-results');
-    resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:2rem;">Searching...</div>';
+    if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:2rem;">Searching...</div>';
 
     var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=' + 
               encodeURIComponent(query) + '&type=video&videoEmbeddable=true&maxResults=10&key=' + YT_API_KEY;
@@ -132,7 +134,7 @@ function doSearch() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
+        if (xhr.readyState === 4 && resultsEl) {
             if (xhr.status === 200) {
                 var data = JSON.parse(xhr.responseText);
                 resultsEl.innerHTML = '';
@@ -169,9 +171,13 @@ function doSearch() {
 
 // ── UI Helpers ──
 function openOverlay(id) {
-    document.getElementById(id).classList.add('active');
+    var el = document.getElementById(id);
+    if (el) el.classList.add('active');
     if (id === 'overlay-search') {
-        setTimeout(function() { document.getElementById('search-input').focus(); }, 200);
+        setTimeout(function() { 
+            var si = document.getElementById('search-input');
+            if (si) si.focus(); 
+        }, 200);
     }
 }
 
@@ -238,7 +244,8 @@ setInterval(syncWeather, 600000);
 // Handle Enter key in search
 var searchInput = document.getElementById('search-input');
 if (searchInput) {
-    searchInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') doSearch();
-    });
+    searchInput.onkeydown = function(e) {
+        var code = e.keyCode || e.which;
+        if (code === 13) doSearch(); // 13 is Enter
+    };
 }
