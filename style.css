@@ -246,3 +246,51 @@ iframe {
     font-size: 0.9rem;
     opacity: 0.6;
 }
+
+/* Up Next Toast */
+#up-next-toast {
+    position: fixed;
+    top: 40px;
+    right: 40px;
+    width: 400px;
+    background: rgba(0,0,0,0.85);
+    border-left: 5px solid var(--accent-color);
+    padding: 20px;
+    border-radius: 15px;
+    z-index: 50;
+    opacity: 0;
+    transform: translateX(50px);
+    transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+#up-next-toast.active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+#toast-label {
+    font-size: 0.8rem;
+    font-weight: 900;
+    color: var(--accent-color);
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+#toast-title {
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#toast-history {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: #ccc;
+    font-style: italic;
+}
