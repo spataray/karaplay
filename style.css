@@ -210,9 +210,30 @@ iframe {
     position: absolute;
     top: 30px;
     right: 30px;
+    width: 80px;
+    height: 80px;
     font-size: 3rem;
     color: white;
     cursor: pointer;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+    z-index: 110;
+}
+
+#ui-layer.driver-right ~ .overlay .close-btn,
+#ui-layer.driver-right ~ .close-btn { /* for any other overlays if they exist */
+    right: auto;
+    left: 30px;
+}
+
+/* Specific selector for overlays if they are siblings or inside */
+#ui-layer.driver-right + .overlay .close-btn,
+.overlay.active .close-btn {
+    /* Keep it simple: if overlay is active and driver-right is set, mirror */
 }
 
 #search-input {
@@ -331,16 +352,6 @@ iframe {
     font-style: italic;
 }
 
-.close-btn {
-    background: rgba(255,255,255,0.1);
-    width: 80px;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background 0.2s;
-}
 .close-btn:active {
     background: var(--bar-red, #ff4444);
 }
