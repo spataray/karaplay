@@ -44,7 +44,7 @@ function onPlayerStateChange(event) {
 function onPlayerError(event) {
     console.warn("Player Error:", event.data);
     // Skip to next if possible
-    player.nextVideo();
+    if (player && player.nextVideo) player.nextVideo();
 }
 
 // ── Radio Mode Logic ──
@@ -86,11 +86,11 @@ function togglePlay() {
 }
 
 function nextTrack() {
-    player.nextVideo();
+    if (player && player.nextVideo) player.nextVideo();
 }
 
 function prevTrack() {
-    player.previousVideo();
+    if (player && player.previousVideo) player.previousVideo();
 }
 
 // ── Settings & Orientation ──
@@ -129,37 +129,42 @@ function doSearch() {
     var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=' + 
               encodeURIComponent(query) + '&type=video&videoEmbeddable=true&maxResults=10&key=' + YT_API_KEY;
 
-    fetch(url)
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            resultsEl.innerHTML = '';
-            if (!data.items || data.items.length === 0) {
-                resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:1.5rem;">No results found</div>';
-                return;
-            }
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                var data = JSON.parse(xhr.responseText);
+                resultsEl.innerHTML = '';
+                if (!data.items || data.items.length === 0) {
+                    resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:1.5rem;">No results found</div>';
+                    return;
+                }
 
-            for (var i = 0; i < data.items.length; i++) {
-                var item = data.items[i];
-                var id = item.id.videoId;
-                var title = item.snippet.title;
-                var author = item.snippet.channelTitle;
-                var thumb = item.snippet.thumbnails.medium.url;
+                for (var i = 0; i < data.items.length; i++) {
+                    var item = data.items[i];
+                    var id = item.id.videoId;
+                    var title = item.snippet.title;
+                    var author = item.snippet.channelTitle;
+                    var thumb = item.snippet.thumbnails.medium.url;
 
-                var div = document.createElement('div');
-                div.className = 'search-item';
-                div.setAttribute('onclick', 'playRadio("' + id + '")');
-                div.innerHTML = 
-                    '<img src="' + thumb + '">' +
-                    '<div class="search-item-info">' +
-                        '<div class="search-item-title">' + escHtml(title) + '</div>' +
-                        '<div class="search-item-author">' + escHtml(author) + '</div>' +
-                    '</div>';
-                resultsEl.appendChild(div);
+                    var div = document.createElement('div');
+                    div.className = 'search-item';
+                    div.setAttribute('onclick', 'playRadio("' + id + '")');
+                    div.innerHTML = 
+                        '<img src="' + thumb + '">' +
+                        '<div class="search-item-info">' +
+                            '<div class="search-item-title">' + escHtml(title) + '</div>' +
+                            '<div class="search-item-author">' + escHtml(author) + '</div>' +
+                        '</div>';
+                    resultsEl.appendChild(div);
+                }
+            } else {
+                resultsEl.innerHTML = '<div style="color:red; text-align:center; font-size:1.5rem;">Search failed</div>';
             }
-        })
-        .catch(function(err) {
-            resultsEl.innerHTML = '<div style="color:red; text-align:center; font-size:1.5rem;">Search failed</div>';
-        });
+        }
+    };
+    xhr.send();
 }
 
 // ── UI Helpers ──
@@ -185,6 +190,8 @@ function escHtml(str) {
 
 // ── Dashboard Updates ──
 function updateClock() {
+    var clockEl = document.getElementById('clock');
+    if (!clockEl) return;
     var now = new Date();
     var h = now.getHours();
     var m = now.getMinutes();
@@ -192,19 +199,26 @@ function updateClock() {
     h = h % 12;
     h = h ? h : 12; // 0 = 12
     m = m < 10 ? '0' + m : m;
-    document.getElementById('clock').innerText = h + ":" + m + " " + ampm;
+    clockEl.innerText = h + ":" + m + " " + ampm;
 }
 
 function syncWeather() {
-    // Honolulu coordinates
-    fetch('https://api.open-meteo.com/v1/forecast?latitude=21.3069&longitude=-157.8583&current_weather=true&temperature_unit=fahrenheit')
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
+    var weatherEl = document.getElementById('weather');
+    if (!weatherEl) return;
+    
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=21.3069&longitude=-157.8583&current_weather=true&temperature_unit=fahrenheit';
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            var data = JSON.parse(xhr.responseText);
             var w = data.current_weather;
             if (w) {
-                document.getElementById('weather').innerText = Math.round(w.temperature) + "°F " + getWeatherEmoji(w.weathercode);
+                weatherEl.innerText = Math.round(w.temperature) + "°F " + getWeatherEmoji(w.weathercode);
             }
-        });
+        }
+    };
+    xhr.send();
 }
 
 function getWeatherEmoji(code) {
@@ -222,6 +236,9 @@ syncWeather();
 setInterval(syncWeather, 600000);
 
 // Handle Enter key in search
-document.getElementById('search-input').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') doSearch();
-});
+var searchInput = document.getElementById('search-input');
+if (searchInput) {
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') doSearch();
+    });
+}
