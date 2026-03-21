@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Karaplay</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+    <!-- Background Video Player -->
+    <div id="player-container">
+        <div id="player"></div>
+    </div>
+
+    <!-- Main UI Layer -->
+    <div id="ui-layer">
+        
+        <!-- Left Sidebar (Driver Side) -->
+        <div id="sidebar">
+            <div class="side-btn" onclick="openOverlay('overlay-search')" title="Search">&#128269;</div>
+            <div class="side-btn" onclick="openOverlay('overlay-settings')" title="Settings">&#9881;</div>
+        </div>
+
+        <!-- Dashboard Info -->
+        <div id="dashboard">
+            <div id="clock">00:00 AM</div>
+            <div id="weather">--°F</div>
+        </div>
+
+        <!-- Bottom Media Bar -->
+        <div id="media-bar">
+            <div id="track-info">
+                <div id="track-title">Ready to Play</div>
+                <div id="track-author">Search for a song to start radio</div>
+            </div>
+            <div class="media-controls">
+                <button class="media-btn" onclick="prevTrack()">&#9198;</button>
+                <button class="media-btn" id="btn-play" onclick="togglePlay()">&#9654;</button>
+                <button class="media-btn" onclick="nextTrack()">&#9197;</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Search Overlay -->
+    <div id="overlay-search" class="overlay">
+        <div class="close-btn" onclick="closeAllOverlays()">&#x2715;</div>
+        <input type="search" id="search-input" placeholder="Search song or artist..." autocomplete="off">
+        <div id="search-results">
+            <div style="text-align:center; padding:40px; opacity:0.3; font-size:1.5rem;">Results will appear here</div>
+        </div>
+    </div>
+
+    <!-- Settings Overlay -->
+    <div id="overlay-settings" class="overlay">
+        <div class="close-btn" onclick="closeAllOverlays()">&#x2715;</div>
+        <h1 style="font-size:3rem; margin-bottom:40px; color:var(--accent-color);">Settings</h1>
+        
+        <div style="width:100%; max-width:600px; display:flex; flex-direction:column; gap:30px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:1.5rem;">Night Mode (Dimmer)</span>
+                <input type="checkbox" style="width:40px; height:40px;">
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:1.5rem;">Show Video Background</span>
+                <input type="checkbox" checked style="width:40px; height:40px;">
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:1.5rem;">Voice Search (Experimental)</span>
+                <button style="background:#333; color:white; border:none; padding:15px 30px; border-radius:10px; font-size:1.2rem;">ENABLE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "Karaplay",
+  "short_name": "Karaplay",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "description": "Car-optimized YouTube music radio.",
+  "theme_color": "#ffcc00",
+  "icons": [
+    {
+      "src": "../images/TAStation-1.JPG",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    }
+  ]
+}
