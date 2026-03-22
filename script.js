@@ -229,25 +229,33 @@ function onPlayerError(event) {
 // ── Radio Mode Logic ──
 function playRadio(videoId) {
     if (!playerReady || !videoId) return;
-    
-    // Clean videoId
+
     videoId = String(videoId).trim();
     currentVideoId = videoId;
-    
+
     console.log("Playing Radio for:", videoId);
 
-    // Using loadPlaylist with RD prefix starts a radio/mix
-    player.loadPlaylist({
-        list: 'RD' + videoId,
-        listType: 'playlist',
-        index: 0,
+    // Force the specific video to play FIRST
+    player.loadVideoById({
+        videoId: videoId,
         startSeconds: 0,
         suggestedQuality: 'default'
     });
-    
+
+    // Then, after a short delay to ensure 'loadVideoById' registered, 
+    // load the Radio mix to populate the queue.
+    setTimeout(function() {
+        player.cuePlaylist({
+            list: 'RD' + videoId,
+            listType: 'playlist',
+            index: 0,
+            startSeconds: 0,
+            suggestedQuality: 'default'
+        });
+    }, 500);
+
     closeAllOverlays();
 }
-
 // ── Track Info ──
 function updateTrackInfo() {
     if (!player || !player.getVideoData) return;
