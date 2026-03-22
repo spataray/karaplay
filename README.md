@@ -5,6 +5,9 @@ A minimalist, car-optimized YouTube music player designed for Android infotainme
 ## 🌟 Key Features
 
 * **Driver-Centric UI**: Oversized controls positioned on the left side for easy reach while driving.
+* **Up Next Queue**: View and jump ahead in your current YouTube Mix with a dedicated queue overlay.
+* **Fun Fact Overlay**: Automatically fetches and displays trivia or artist biographies from Wikipedia for every new song.
+* **Up Next Toast**: Sleek slide-in notifications that show you the title of the next track coming up.
 * **Smart Radio Mode**: Search for a single song, and Karaplay automatically generates a continuous YouTube Mix (`RD` algorithm) to keep similar music flowing indefinitely.
 * **Dashboard Integration**: Large, high-contrast digital clock and live weather updates (Open-Meteo API).
 * **Legacy Compatibility**: Written in ES5 JavaScript to ensure smooth performance on older Smart TV and Car browsers.
@@ -34,10 +37,11 @@ A minimalist, car-optimized YouTube music player designed for Android infotainme
 
 ## 🎮 How to Use
 
-1. Tap the **Search (Magnifying Glass)** on the left sidebar.
-2. Type a song or artist name.
-3. Select a result to start the **Smart Radio**.
-4. Use the **Gear Icon** to adjust settings like "Night Mode" or "Video Background".
+1. Tap the **Search (🔍)** on the left sidebar.
+2. Type a song or artist name and select a result to start the **Smart Radio**.
+3. Tap the **Queue (☰)** button to see what's coming up next or jump to a future track.
+4. Watch the top-center of the screen for **Fun Facts** about the current track!
+5. Use the **Gear Icon (⚙️)** to adjust settings like "Night Mode" or "Driver Orientation".
 
 ---
 *Created for the T.A. Station Digital Signage ecosystem.*
