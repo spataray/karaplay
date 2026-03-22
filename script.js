@@ -435,23 +435,29 @@ function doSearch() {
                         }
 
                         for (var i = 0; i < data.items.length; i++) {
-                            var item = data.items[i];
-                            var id = item.id.videoId;
-                            if (!id) continue;
+                            (function(item) {
+                                var id = item.id.videoId;
+                                if (!id) return;
 
-                            var title = item.snippet.title;
-                            var author = item.snippet.channelTitle;
-                            var thumb = item.snippet.thumbnails.medium.url;
+                                var title = item.snippet.title;
+                                var author = item.snippet.channelTitle;
+                                var thumb = item.snippet.thumbnails.medium.url;
 
-                            var div = document.createElement('div');
-                            div.className = 'search-item';
-                            div.innerHTML = 
-                                '<img src="' + thumb + '">' +
-                                '<div class="search-item-info" onclick="playRadio(\'' + id + '\')">' +
-                                    '<div class="search-item-title">' + escHtml(title) + '</div>' +
-                                    '<div class="search-item-author">' + escHtml(author) + '</div>' +
-                                '</div>';
-                            resultsEl.appendChild(div);
+                                var div = document.createElement('div');
+                                div.className = 'search-item';
+                                div.innerHTML = 
+                                    '<img src="' + thumb + '">' +
+                                    '<div class="search-item-info">' +
+                                        '<div class="search-item-title">' + escHtml(title) + '</div>' +
+                                        '<div class="search-item-author">' + escHtml(author) + '</div>' +
+                                    '</div>';
+                                
+                                div.querySelector('.search-item-info').onclick = function() {
+                                    playRadio(id);
+                                };
+
+                                resultsEl.appendChild(div);
+                            })(data.items[i]);
                         }
                     } catch(e) {
                         resultsEl.innerHTML = '<div style="color:red; text-align:center;">Parse error.</div>';
@@ -538,38 +544,50 @@ function updateQueueList() {
                 if (resultsEl) {
                     resultsEl.innerHTML = '';
                     for (var j = 0; j < idsToFetch.length; j++) {
-                        var vid = idsToFetch[j];
-                        var snippet = videoDetails[vid];
-                        if (!snippet) continue;
+                        (function(vid, actualIndex) {
+                            var snippet = videoDetails[vid];
+                            if (!snippet) return;
 
-                        var actualIndex = startIdx + j;
-                        var isCurrent = actualIndex === currentIndex;
-                        var isCanceled = skipList.indexOf(vid) !== -1;
-                        
-                        var div = document.createElement('div');
-                        div.className = 'search-item' + (isCurrent ? ' playing' : '') + (isCanceled ? ' canceled' : '');
-                        
-                        var title = snippet.title;
-                        var author = snippet.channelTitle;
-                        var thumb = snippet.thumbnails.default ? snippet.thumbnails.default.url : '';
+                            var isCurrent = actualIndex === currentIndex;
+                            var isCanceled = skipList.indexOf(vid) !== -1;
+                            
+                            var div = document.createElement('div');
+                            div.className = 'search-item' + (isCurrent ? ' playing' : '') + (isCanceled ? ' canceled' : '');
+                            
+                            var title = snippet.title;
+                            var author = snippet.channelTitle;
+                            var thumb = snippet.thumbnails.default ? snippet.thumbnails.default.url : '';
 
-                        var html = 
-                            '<img src="' + thumb + '">' +
-                            '<div class="search-item-info" onclick="playQueueItem(' + actualIndex + ')">' +
-                                '<div class="search-item-title">' + (isCurrent ? '▶ ' : '') + escHtml(title) + '</div>' +
-                                '<div class="search-item-author">' + escHtml(author) + '</div>' +
-                            '</div>';
-                        
-                        if (isCurrent) {
-                            html += '<div style="color:var(--accent-color); font-weight:bold; margin-left: 20px;">NOW PLAYING</div>';
-                        } else if (!isCanceled) {
-                            html += '<div class="cancel-btn" onclick="cancelTrack(\'' + vid + '\')">✕</div>';
-                        } else {
-                            html += '<div style="color:red; font-weight:bold; margin-left: 20px;">CANCELED</div>';
-                        }
-                        
-                        div.innerHTML = html;
-                        resultsEl.appendChild(div);
+                            var html = 
+                                '<img src="' + thumb + '">' +
+                                '<div class="search-item-info">' +
+                                    '<div class="search-item-title">' + (isCurrent ? '▶ ' : '') + escHtml(title) + '</div>' +
+                                    '<div class="search-item-author">' + escHtml(author) + '</div>' +
+                                '</div>';
+                            
+                            if (isCurrent) {
+                                html += '<div style="color:var(--accent-color); font-weight:bold; margin-left: 20px;">NOW PLAYING</div>';
+                            } else if (!isCanceled) {
+                                html += '<div class="cancel-btn">✕</div>';
+                            } else {
+                                html += '<div style="color:red; font-weight:bold; margin-left: 20px;">CANCELED</div>';
+                            }
+                            
+                            div.innerHTML = html;
+                            
+                            div.querySelector('.search-item-info').onclick = function() {
+                                playQueueItem(actualIndex);
+                            };
+                            
+                            var cb = div.querySelector('.cancel-btn');
+                            if (cb) {
+                                cb.onclick = function() {
+                                    cancelTrack(vid);
+                                };
+                            }
+
+                            resultsEl.appendChild(div);
+                        })(idsToFetch[j], startIdx + j);
                     }
                 }
             } catch(e) {}
