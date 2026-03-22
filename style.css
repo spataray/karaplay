@@ -451,12 +451,11 @@ iframe {
 /* Fun Fact Overlay */
 #fun-fact-overlay {
     position: fixed;
-    top: 40px;
-    left: 50%;
-    transform: translate(-50%, -100%);
-    width: 600px;
+    bottom: 140px; /* Above media bar */
+    right: 40px;
+    width: 450px;
     background: rgba(0,0,0,0.85);
-    border-bottom: 4px solid var(--accent-color);
+    border-left: 4px solid var(--accent-color);
     padding: 20px 30px;
     border-radius: 20px;
     z-index: 200;
@@ -465,15 +464,28 @@ iframe {
     gap: 20px;
     align-items: center;
     transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform: translateX(50px);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     pointer-events: none;
     box-shadow: 0 15px 40px rgba(0,0,0,0.5);
 }
 
+#ui-layer.driver-right ~ #fun-fact-overlay {
+    right: auto;
+    left: 40px;
+    border-left: none;
+    border-right: 4px solid var(--accent-color);
+    transform: translateX(-50px);
+}
+
 #fun-fact-overlay.active {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateX(0);
+}
+
+#ui-layer.driver-right ~ #fun-fact-overlay.active {
+    transform: translateX(0);
 }
 
 #fact-icon {

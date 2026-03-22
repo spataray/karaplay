@@ -40,7 +40,7 @@ A minimalist, car-optimized YouTube music player designed for Android infotainme
 1. Tap the **Search (🔍)** on the left sidebar.
 2. Type a song or artist name and select a result to start the **Smart Radio**.
 3. Tap the **Queue (☰)** button to see what's coming up next or jump to a future track.
-4. Watch the top-center of the screen for **Fun Facts** about the current track!
+4. Watch the bottom-right of the screen for **Fun Facts** about the current track!
 5. Use the **Gear Icon (⚙️)** to adjust settings like "Night Mode" or "Driver Orientation".
 
 ---
