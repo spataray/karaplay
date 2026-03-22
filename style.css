@@ -55,19 +55,43 @@ iframe {
 
 /* Sidebar (Driver Side) */
 #sidebar {
-    width: 100px;
+    width: 280px;
     height: 100%;
     background: linear-gradient(to right, rgba(0,0,0,0.8), transparent);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 40px;
+    justify-content: space-between;
+    padding: var(--safe-padding);
+    box-sizing: border-box;
     pointer-events: auto;
 }
 
 #ui-layer.driver-right #sidebar {
     background: linear-gradient(to left, rgba(0,0,0,0.8), transparent);
+}
+
+#sidebar-top {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+#sidebar-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+#ui-layer.driver-right #sidebar-top,
+#ui-layer.driver-right #sidebar-bottom {
+    align-items: flex-end;
+}
+
+#playback-cluster {
+    display: flex;
+    gap: 15px;
 }
 
 .side-btn {
@@ -94,7 +118,7 @@ iframe {
 #dashboard {
     position: absolute;
     top: var(--safe-padding);
-    left: 120px;
+    left: 300px;
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -103,7 +127,7 @@ iframe {
 
 #ui-layer.driver-right #dashboard {
     left: auto;
-    right: 120px;
+    right: 300px;
     align-items: flex-end;
 }
 
@@ -123,7 +147,7 @@ iframe {
 #media-bar {
     position: absolute;
     bottom: 0;
-    left: 100px;
+    left: 280px;
     right: 0;
     height: 120px;
     background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
@@ -136,7 +160,7 @@ iframe {
 
 #ui-layer.driver-right #media-bar {
     left: 0;
-    right: 100px;
+    right: 280px;
     flex-direction: row-reverse;
 }
 

@@ -21,7 +21,7 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag" style="position: fixed; bottom: 5px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.2); z-index: 1000; font-family: monospace;">v1.7.0 (2026-03-21 18:08 HST)</div>
+        <div id="version-tag" style="position: fixed; bottom: 5px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.2); z-index: 1000; font-family: monospace;">v1.7.1 (2026-03-21 18:27 HST)</div>
         
         <!-- Fun Fact Overlay -->
         <div id="fun-fact-overlay">
@@ -34,14 +34,19 @@
 
         <!-- Sidebar (Driver Side) -->
         <div id="sidebar">
-            <div class="side-btn" onclick="openOverlay('overlay-search')" title="Search">&#128269;</div>
-            <div class="side-btn" onclick="openOverlay('overlay-queue')" title="Queue">&#9776;</div>
-            <div style="display:flex; flex-direction:column; gap:20px;">
-                <div class="side-btn" onclick="prevTrack()" title="Previous Track">&#9198;</div>
-                <div class="side-btn" id="sidebar-btn-play" onclick="togglePlay()" title="Play/Pause">&#9654;</div>
-                <div class="side-btn" onclick="nextTrack()" title="Next Track">&#9197;</div>
+            <div id="sidebar-top">
+                <div class="side-btn" onclick="openOverlay('overlay-search')" title="Search">&#128269;</div>
+                <div class="side-btn" onclick="openOverlay('overlay-queue')" title="Queue">&#9776;</div>
             </div>
-            <div class="side-btn" onclick="openOverlay('overlay-settings')" title="Settings">&#9881;</div>
+
+            <div id="sidebar-bottom">
+                <div class="side-btn" onclick="openOverlay('overlay-settings')" title="Settings">&#9881;</div>
+                <div id="playback-cluster">
+                    <div class="side-btn" onclick="prevTrack()" title="Previous Track">&#9198;</div>
+                    <div class="side-btn" id="sidebar-btn-play" onclick="togglePlay()" title="Play/Pause">&#9654;</div>
+                    <div class="side-btn" onclick="nextTrack()" title="Next Track">&#9197;</div>
+                </div>
+            </div>
         </div>
 
         <!-- Dashboard Info -->
