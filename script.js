@@ -229,72 +229,70 @@ function onPlayerError(event) {
 // ── Radio Mode Logic ──
 function playRadio(videoId, isResume) {
     if (!playerReady || !videoId) return;
-
+    
     videoId = String(videoId).trim();
     currentVideoId = videoId;
+    
+    console.log("Starting Custom Radio for:", videoId);
 
-    console.log("Playing Radio for:", videoId);
-
-    // Step 1: Load the Smart Radio Mix
-    player.loadPlaylist({
-        list: 'RD' + videoId,
-        listType: 'playlist',
-        index: 0,
-        suggestedQuality: 'default'
-    });
-
-    // Step 2: "Wait and Jump" Logic
-    // The RD mix doesn't always put the seed song first. 
-    // We poll for a few seconds to find our song in the list and force a jump.
-    var checkCount = 0;
-    var maxChecks = 20; // 10 seconds total
-    var jumpDone = false;
-
-    var checkInterval = setInterval(function() {
-        if (!player || !player.getPlaylist || jumpDone) {
-            clearInterval(checkInterval);
-            return;
-        }
-
-        var playlist = player.getPlaylist();
-        var data = player.getVideoData();
-        var nowPlayingId = data ? data.video_id : "";
-
-        // If we're already playing the right song, we're done!
-        if (nowPlayingId === videoId) {
-            console.log("Confirmed: Playing correct song.");
-            jumpDone = true;
-            clearInterval(checkInterval);
-            return;
-        }
-
-        // Search the newly loaded playlist for our target song
-        if (playlist && playlist.length > 0) {
-            var targetIndex = -1;
-            for (var i = 0; i < playlist.length; i++) {
-                if (playlist[i] === videoId) {
-                    targetIndex = i;
-                    break;
+    // If resuming, check if we have a cached queue to save quota
+    if (isResume) {
+        try {
+            var cachedQueue = localStorage.getItem('kp_cached_queue');
+            if (cachedQueue) {
+                var ids = JSON.parse(cachedQueue);
+                if (ids && ids.length > 0 && ids[0] === videoId) {
+                    console.log("Resuming with cached queue.");
+                    player.loadPlaylist(ids, 0, 0, 'default');
+                    return;
                 }
             }
+        } catch(e) {}
+    }
 
-            if (targetIndex !== -1) {
-                console.log("Found target at index " + targetIndex + ". Jumping...");
-                player.playVideoAt(targetIndex);
-                jumpDone = true;
-                clearInterval(checkInterval);
-                return;
+    // Step 1: Play the target song IMMEDIATELY
+    player.loadVideoById(videoId);
+
+    // Step 2: Fetch related videos to build a reliable queue
+    // This costs 100 units, but is 100% reliable in PWAs/Cars
+    var activeKey = (typeof YT_API_KEY !== 'undefined') ? YT_API_KEY : window.YT_API_KEY;
+    if (!activeKey) return;
+
+    var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=15&relatedToVideoId=' + videoId + '&key=' + activeKey;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                var relatedIds = [videoId]; // Seed with current song
+                if (data.items) {
+                    for (var i = 0; i < data.items.length; i++) {
+                        if (data.items[i].id && data.items[i].id.videoId) {
+                            relatedIds.push(data.items[i].id.videoId);
+                        }
+                    }
+                }
+
+                console.log("Custom queue built with " + relatedIds.length + " tracks.");
+                
+                // Cache it for refreshes
+                try {
+                    localStorage.setItem('kp_cached_queue', JSON.stringify(relatedIds));
+                } catch(e) {}
+
+                // Load the custom playlist into the player
+                // Using cuePlaylist allows the current video to keep playing
+                player.cuePlaylist(relatedIds, 0, 0, 'default');
+                
+            } catch(e) {
+                console.error("Error building custom queue:", e);
             }
         }
-
-        checkCount++;
-        if (checkCount >= maxChecks) {
-            console.warn("Target song not found in Mix. Forcing direct load.");
-            player.loadVideoById(videoId);
-            clearInterval(checkInterval);
-        }
-    }, 500);
-
+    };
+    xhr.send();
+    
     if (!isResume) closeAllOverlays();
 }
 
@@ -665,6 +663,7 @@ function clearQueue() {
         try {
             localStorage.removeItem('kp_last_vid');
             localStorage.removeItem('kp_skip_list');
+            localStorage.removeItem('kp_cached_queue');
         } catch(e) {}
         
         if (player && player.stopVideo) player.stopVideo();
