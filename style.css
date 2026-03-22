@@ -328,6 +328,34 @@ iframe {
     border-color: var(--accent-color);
 }
 
+.search-item.canceled {
+    opacity: 0.4;
+    border-color: rgba(255,0,0,0.3);
+}
+
+.cancel-btn {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: white;
+    font-size: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-left: 20px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.cancel-btn:active {
+    background: #ff3333;
+    color: white;
+    transform: scale(0.9);
+}
+
 .search-item img {
     width: 160px;
     aspect-ratio: 16/9;

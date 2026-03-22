@@ -30,13 +30,24 @@ function onPlayerReady(event) {
     console.log("Karaplay Ready");
 }
 
+var skipList = [];
+
 function onPlayerStateChange(event) {
     if (event.data === 1) { // YT.PlayerState.PLAYING
+        var data = player.getVideoData();
+        var videoId = data ? data.video_id : "";
+        
+        // Auto-skip if in skipList
+        if (videoId && skipList.indexOf(videoId) !== -1) {
+            console.log("Auto-skipping canceled track:", videoId);
+            nextTrack();
+            return;
+        }
+
         updateTrackInfo();
         showUpNextToast();
         
         // Fun Fact Overlay
-        var data = player.getVideoData();
         if (data && data.title) {
             showFunFact(data.title, data.author);
         }
@@ -501,7 +512,6 @@ function updateQueueList() {
 
     if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:2rem;">Loading Queue...</div>';
 
-    // Get up to 15 items starting from current or previous
     var startIdx = Math.max(0, currentIndex);
     var endIdx = Math.min(playlist.length, startIdx + 15);
     var idsToFetch = playlist.slice(startIdx, endIdx);
@@ -518,50 +528,62 @@ function updateQueueList() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                try {
-                    var data = JSON.parse(xhr.responseText);
-                    var videoDetails = {};
-                    for (var i = 0; i < data.items.length; i++) {
-                        videoDetails[data.items[i].id] = data.items[i].snippet;
-                    }
-
-                    if (resultsEl) {
-                        resultsEl.innerHTML = '';
-                        for (var j = 0; j < idsToFetch.length; j++) {
-                            var vid = idsToFetch[j];
-                            var snippet = videoDetails[vid];
-                            if (!snippet) continue;
-
-                            var actualIndex = startIdx + j;
-                            var isCurrent = actualIndex === currentIndex;
-                            
-                            var div = document.createElement('div');
-                            div.className = 'search-item' + (isCurrent ? ' playing' : '');
-                            div.setAttribute('onclick', 'playQueueItem(' + actualIndex + ')');
-                            
-                            var title = snippet.title;
-                            var author = snippet.channelTitle;
-                            var thumb = snippet.thumbnails.default ? snippet.thumbnails.default.url : '';
-
-                            div.innerHTML = 
-                                '<img src="' + thumb + '">' +
-                                '<div class="search-item-info">' +
-                                    '<div class="search-item-title">' + (isCurrent ? '▶ ' : '') + escHtml(title) + '</div>' +
-                                    '<div class="search-item-author">' + escHtml(author) + '</div>' +
-                                '</div>' +
-                                (isCurrent ? '<div style="color:var(--accent-color); font-weight:bold; margin-left: 20px;">NOW PLAYING</div>' : '');
-                            resultsEl.appendChild(div);
-                        }
-                    }
-                } catch(e) {
-                    if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">Error loading queue.</div>';
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                var videoDetails = {};
+                for (var i = 0; i < data.items.length; i++) {
+                    videoDetails[data.items[i].id] = data.items[i].snippet;
                 }
-            }
+
+                if (resultsEl) {
+                    resultsEl.innerHTML = '';
+                    for (var j = 0; j < idsToFetch.length; j++) {
+                        var vid = idsToFetch[j];
+                        var snippet = videoDetails[vid];
+                        if (!snippet) continue;
+
+                        var actualIndex = startIdx + j;
+                        var isCurrent = actualIndex === currentIndex;
+                        var isCanceled = skipList.indexOf(vid) !== -1;
+                        
+                        var div = document.createElement('div');
+                        div.className = 'search-item' + (isCurrent ? ' playing' : '') + (isCanceled ? ' canceled' : '');
+                        
+                        var title = snippet.title;
+                        var author = snippet.channelTitle;
+                        var thumb = snippet.thumbnails.default ? snippet.thumbnails.default.url : '';
+
+                        var html = 
+                            '<img src="' + thumb + '">' +
+                            '<div class="search-item-info" onclick="playQueueItem(' + actualIndex + ')">' +
+                                '<div class="search-item-title">' + (isCurrent ? '▶ ' : '') + escHtml(title) + '</div>' +
+                                '<div class="search-item-author">' + escHtml(author) + '</div>' +
+                            '</div>';
+                        
+                        if (isCurrent) {
+                            html += '<div style="color:var(--accent-color); font-weight:bold; margin-left: 20px;">NOW PLAYING</div>';
+                        } else if (!isCanceled) {
+                            html += '<div class="cancel-btn" onclick="cancelTrack(\'' + vid + '\')">✕</div>';
+                        } else {
+                            html += '<div style="color:red; font-weight:bold; margin-left: 20px;">CANCELED</div>';
+                        }
+                        
+                        div.innerHTML = html;
+                        resultsEl.appendChild(div);
+                    }
+                }
+            } catch(e) {}
         }
     };
     xhr.send();
+}
+
+function cancelTrack(videoId) {
+    if (videoId && skipList.indexOf(videoId) === -1) {
+        skipList.push(videoId);
+        updateQueueList();
+    }
 }
 
 function playQueueItem(index) {
