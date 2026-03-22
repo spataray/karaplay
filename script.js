@@ -5,6 +5,17 @@ var playerReady = false;
 var currentVideoId = "";
 var syncDatabase;
 
+// Public Firebase config for Remote Sync (Safe to be public)
+var SYNC_FIREBASE_CONFIG = {
+    apiKey: "AIzaSyAJ6XE866VF-8VKn7iMtVQjMZTS_LPB9l4",
+    authDomain: "ta-station-remote.firebaseapp.com",
+    databaseURL: "https://ta-station-remote-default-rtdb.firebaseio.com",
+    projectId: "ta-station-remote",
+    storageBucket: "ta-station-remote.firebasestorage.app",
+    messagingSenderId: "805160829750",
+    appId: "1:805160829750:web:9a2a9e1cbf639562aba997"
+};
+
 // ── YouTube API Setup ──
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
@@ -159,17 +170,23 @@ function applySettings() {
 
 // ── Remote Sync Logic ──
 function initSync() {
-    if (typeof firebase === 'undefined' || typeof firebaseConfig === 'undefined') {
-        console.warn("Firebase not available for sync.");
-        return;
+    if (typeof firebase === 'undefined') {
+        console.warn("Firebase SDK not loaded.");
+        return false;
     }
-    firebase.initializeApp(firebaseConfig);
+    // Use hardcoded config for sync service
+    if (firebase.apps.length === 0) {
+        firebase.initializeApp(SYNC_FIREBASE_CONFIG);
+    }
     syncDatabase = firebase.database();
+    return true;
 }
 
 function startSyncReceiver() {
-    initSync();
-    if (!syncDatabase) return;
+    if (!initSync()) {
+        alert("Remote Sync failed to initialize. Check internet connection.");
+        return;
+    }
 
     var code = Math.floor(1000 + Math.random() * 9000).toString();
     document.getElementById('sync-code-display').innerText = code;
@@ -191,8 +208,7 @@ function startSyncReceiver() {
 }
 
 function sendSyncKey() {
-    initSync();
-    if (!syncDatabase) {
+    if (!initSync()) {
         alert("Sync service unavailable.");
         return;
     }
@@ -223,7 +239,6 @@ function checkSyncMode() {
         openOverlay('overlay-sync');
         document.getElementById('sync-sender-ui').style.display = 'block';
         document.getElementById('sync-receiver-ui').style.display = 'none';
-        // Hide UI elements to keep it clean
         var ui = document.getElementById('ui-layer');
         if (ui) ui.style.display = 'none';
     }
@@ -248,7 +263,7 @@ function doSearch() {
     var activeKey = (typeof YT_API_KEY !== 'undefined') ? YT_API_KEY : window.YT_API_KEY;
 
     if (!activeKey) {
-        alert("YouTube API Key is missing. Add it in Settings or via URL (?key=...)");
+        alert("YouTube API Key is missing. Add it in Settings or use Remote Sync.");
         if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">API Key missing.</div>';
         return;
     }
@@ -322,7 +337,6 @@ function openOverlay(id) {
     }
 
     if (id === 'overlay-sync') {
-        // Only start receiver if not already in sender mode
         if (getQueryParam('sync') === null) {
             startSyncReceiver();
         }
