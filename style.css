@@ -281,6 +281,17 @@ iframe {
     background: #1a1a1a;
     border-radius: 15px;
     align-items: center;
+    border: 2px solid transparent;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.search-item:active {
+    background: #333;
+}
+
+.search-item.playing {
+    background: #222;
+    border-color: var(--accent-color);
 }
 
 .search-item img {

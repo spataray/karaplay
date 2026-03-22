@@ -33,7 +33,55 @@ function onPlayerReady(event) {
 function onPlayerStateChange(event) {
     if (event.data === 1) { // YT.PlayerState.PLAYING
         updateTrackInfo();
+        showUpNextToast();
+        
+        // Refresh queue if overlay is open
+        var queueOverlay = document.getElementById('overlay-queue');
+        if (queueOverlay && queueOverlay.classList.contains('active')) {
+            updateQueueList();
+        }
     }
+}
+
+function showUpNextToast() {
+    if (!player || !player.getPlaylist) return;
+    
+    var playlist = player.getPlaylist();
+    var currentIndex = player.getPlaylistIndex();
+    
+    if (!playlist || currentIndex === -1 || currentIndex >= playlist.length - 1) return;
+    
+    var nextVideoId = playlist[currentIndex + 1];
+    var activeKey = (typeof YT_API_KEY !== 'undefined') ? YT_API_KEY : window.YT_API_KEY;
+    
+    if (!activeKey) return;
+
+    var url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet&id=' + nextVideoId + '&key=' + activeKey;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                if (data.items && data.items.length > 0) {
+                    var title = data.items[0].snippet.title;
+                    var toast = document.getElementById('up-next-toast');
+                    var toastTitle = document.getElementById('toast-title');
+                    var toastHistory = document.getElementById('toast-history');
+                    
+                    if (toast && toastTitle) {
+                        toastTitle.innerText = title;
+                        if (toastHistory) toastHistory.innerText = "Coming up next...";
+                        toast.classList.add('active');
+                        setTimeout(function() {
+                            toast.classList.remove('active');
+                        }, 5000);
+                    }
+                }
+            } catch(e) {}
+        }
+    };
+    xhr.send();
 }
 
 function onPlayerError(event) {
@@ -312,11 +360,100 @@ function openOverlay(id) {
         }, 200);
     }
 
+    if (id === 'overlay-queue') {
+        updateQueueList();
+    }
+
     if (id === 'overlay-sync') {
         var baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
         var exampleUrl = baseUrl + "?key=YOUR_KEY";
         var displayEl = document.getElementById('sync-example-url');
         if (displayEl) displayEl.innerText = exampleUrl;
+    }
+}
+
+// ── Queue Management ──
+function updateQueueList() {
+    if (!player || !player.getPlaylist) return;
+    
+    var playlist = player.getPlaylist();
+    var currentIndex = player.getPlaylistIndex();
+    var resultsEl = document.getElementById('queue-list');
+    
+    if (!playlist || playlist.length === 0) {
+        if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.3; font-size:1.5rem;">Queue is empty. Search for a song to start radio.</div>';
+        return;
+    }
+
+    if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:2rem;">Loading Queue...</div>';
+
+    // Get up to 15 items starting from current or previous
+    var startIdx = Math.max(0, currentIndex);
+    var endIdx = Math.min(playlist.length, startIdx + 15);
+    var idsToFetch = playlist.slice(startIdx, endIdx);
+
+    var activeKey = (typeof YT_API_KEY !== 'undefined') ? YT_API_KEY : window.YT_API_KEY;
+    if (!activeKey) {
+        if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">API Key missing. Check Settings.</div>';
+        return;
+    }
+
+    var url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet&id=' + 
+              idsToFetch.join(',') + '&key=' + activeKey;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    var videoDetails = {};
+                    for (var i = 0; i < data.items.length; i++) {
+                        videoDetails[data.items[i].id] = data.items[i].snippet;
+                    }
+
+                    if (resultsEl) {
+                        resultsEl.innerHTML = '';
+                        for (var j = 0; j < idsToFetch.length; j++) {
+                            var vid = idsToFetch[j];
+                            var snippet = videoDetails[vid];
+                            if (!snippet) continue;
+
+                            var actualIndex = startIdx + j;
+                            var isCurrent = actualIndex === currentIndex;
+                            
+                            var div = document.createElement('div');
+                            div.className = 'search-item' + (isCurrent ? ' playing' : '');
+                            div.setAttribute('onclick', 'playQueueItem(' + actualIndex + ')');
+                            
+                            var title = snippet.title;
+                            var author = snippet.channelTitle;
+                            var thumb = snippet.thumbnails.default ? snippet.thumbnails.default.url : '';
+
+                            div.innerHTML = 
+                                '<img src="' + thumb + '">' +
+                                '<div class="search-item-info">' +
+                                    '<div class="search-item-title">' + (isCurrent ? '▶ ' : '') + escHtml(title) + '</div>' +
+                                    '<div class="search-item-author">' + escHtml(author) + '</div>' +
+                                '</div>' +
+                                (isCurrent ? '<div style="color:var(--accent-color); font-weight:bold; margin-left: 20px;">NOW PLAYING</div>' : '');
+                            resultsEl.appendChild(div);
+                        }
+                    }
+                } catch(e) {
+                    if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">Error loading queue.</div>';
+                }
+            }
+        }
+    };
+    xhr.send();
+}
+
+function playQueueItem(index) {
+    if (player && player.playVideoAt) {
+        player.playVideoAt(index);
+        closeAllOverlays();
     }
 }
 
