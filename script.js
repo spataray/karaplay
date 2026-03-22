@@ -245,9 +245,15 @@ function checkSyncMode() {
 }
 
 function getQueryParam(name) {
-    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
-    if (results == null) return null;
-    return decodeURIComponent(results[1]) || 0;
+    var query = window.location.search.substring(1);
+    var vars = query.split("&");
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split("=");
+        if (pair[0] === name) {
+            return pair[1] !== undefined ? decodeURIComponent(pair[1]) : "";
+        }
+    }
+    return null;
 }
 
 // ── Search Logic ──
