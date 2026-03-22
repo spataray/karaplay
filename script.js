@@ -659,6 +659,7 @@ function doSearch() {
                                 var div = document.createElement('div');
                                 div.className = 'search-item';
                                 div.onclick = function() { 
+                                    console.log("SEARCH CLICK: Selecting ID", id, "Title:", item.snippet.title);
                                     saveToHistory(id, item.snippet.title, item.snippet.channelTitle, item.snippet.thumbnails.medium.url);
                                     playRadio(id); 
                                 };
