@@ -439,23 +439,17 @@ function doSearch() {
                                 var id = item.id.videoId;
                                 if (!id) return;
 
-                                var title = item.snippet.title;
-                                var author = item.snippet.channelTitle;
-                                var thumb = item.snippet.thumbnails.medium.url;
-
                                 var div = document.createElement('div');
                                 div.className = 'search-item';
+                                div.onclick = function() { playRadio(id); };
+
                                 div.innerHTML = 
-                                    '<img src="' + thumb + '">' +
+                                    '<img src="' + item.snippet.thumbnails.medium.url + '">' +
                                     '<div class="search-item-info">' +
-                                        '<div class="search-item-title">' + escHtml(title) + '</div>' +
-                                        '<div class="search-item-author">' + escHtml(author) + '</div>' +
+                                        '<div class="search-item-title">' + escHtml(item.snippet.title) + '</div>' +
+                                        '<div class="search-item-author">' + escHtml(item.snippet.channelTitle) + '</div>' +
                                     '</div>';
                                 
-                                div.querySelector('.search-item-info').onclick = function() {
-                                    playRadio(id);
-                                };
-
                                 resultsEl.appendChild(div);
                             })(data.items[i]);
                         }
@@ -541,55 +535,51 @@ function updateQueueList() {
                     videoDetails[data.items[i].id] = data.items[i].snippet;
                 }
 
-                if (resultsEl) {
-                    resultsEl.innerHTML = '';
-                    for (var j = 0; j < idsToFetch.length; j++) {
-                        (function(vid, actualIndex) {
-                            var snippet = videoDetails[vid];
-                            if (!snippet) return;
+                    if (resultsEl) {
+                        resultsEl.innerHTML = '';
+                        for (var j = 0; j < idsToFetch.length; j++) {
+                            (function(vid, actualIndex) {
+                                var snippet = videoDetails[vid];
+                                if (!snippet) return;
 
-                            var isCurrent = actualIndex === currentIndex;
-                            var isCanceled = skipList.indexOf(vid) !== -1;
-                            
-                            var div = document.createElement('div');
-                            div.className = 'search-item' + (isCurrent ? ' playing' : '') + (isCanceled ? ' canceled' : '');
-                            
-                            var title = snippet.title;
-                            var author = snippet.channelTitle;
-                            var thumb = snippet.thumbnails.default ? snippet.thumbnails.default.url : '';
+                                var isCurrent = actualIndex === currentIndex;
+                                var isCanceled = skipList.indexOf(vid) !== -1;
+                                
+                                var div = document.createElement('div');
+                                div.className = 'search-item' + (isCurrent ? ' playing' : '') + (isCanceled ? ' canceled' : '');
+                                div.onclick = function() { playQueueItem(actualIndex); };
 
-                            var html = 
-                                '<img src="' + thumb + '">' +
-                                '<div class="search-item-info">' +
-                                    '<div class="search-item-title">' + (isCurrent ? '▶ ' : '') + escHtml(title) + '</div>' +
-                                    '<div class="search-item-author">' + escHtml(author) + '</div>' +
-                                '</div>';
-                            
-                            if (isCurrent) {
-                                html += '<div style="color:var(--accent-color); font-weight:bold; margin-left: 20px;">NOW PLAYING</div>';
-                            } else if (!isCanceled) {
-                                html += '<div class="cancel-btn">✕</div>';
-                            } else {
-                                html += '<div style="color:red; font-weight:bold; margin-left: 20px;">CANCELED</div>';
-                            }
-                            
-                            div.innerHTML = html;
-                            
-                            div.querySelector('.search-item-info').onclick = function() {
-                                playQueueItem(actualIndex);
-                            };
-                            
-                            var cb = div.querySelector('.cancel-btn');
-                            if (cb) {
-                                cb.onclick = function() {
-                                    cancelTrack(vid);
-                                };
-                            }
+                                var thumb = snippet.thumbnails.default ? snippet.thumbnails.default.url : '';
+                                var html = 
+                                    '<img src="' + thumb + '">' +
+                                    '<div class="search-item-info">' +
+                                        '<div class="search-item-title">' + (isCurrent ? '▶ ' : '') + escHtml(snippet.title) + '</div>' +
+                                        '<div class="search-item-author">' + escHtml(snippet.channelTitle) + '</div>' +
+                                    '</div>';
+                                
+                                if (isCurrent) {
+                                    html += '<div style="color:var(--accent-color); font-weight:bold; margin-left: 20px;">NOW PLAYING</div>';
+                                } else if (!isCanceled) {
+                                    html += '<div class="cancel-btn">✕</div>';
+                                } else {
+                                    html += '<div style="color:red; font-weight:bold; margin-left: 20px;">CANCELED</div>';
+                                }
+                                
+                                div.innerHTML = html;
+                                
+                                // Specific cancel logic
+                                var cb = div.querySelector('.cancel-btn');
+                                if (cb) {
+                                    cb.onclick = function(e) {
+                                        e.stopPropagation(); // Don't trigger 'Play Now'
+                                        cancelTrack(vid);
+                                    };
+                                }
 
-                            resultsEl.appendChild(div);
-                        })(idsToFetch[j], startIdx + j);
+                                resultsEl.appendChild(div);
+                            })(idsToFetch[j], startIdx + j);
+                        }
                     }
-                }
             } catch(e) {}
         }
     };

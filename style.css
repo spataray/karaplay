@@ -293,13 +293,14 @@ iframe {
     border-color: var(--accent-color);
 }
 
-#search-results {
+#search-results, #queue-list {
     width: 100%;
     max-width: 1000px;
     display: flex;
     flex-direction: column;
     gap: 15px;
     overflow-y: auto;
+    padding-top: 120px; /* Clear the large close-btn */
 }
 
 .search-item {
