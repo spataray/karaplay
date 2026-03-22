@@ -290,25 +290,20 @@ function playRadio(videoId, isResume) {
         } catch(e) {}
     }
 
-    // NEW PLAYBACK LOGIC (Fixes instant-skip)
     // 1. Play the chosen song IMMEDIATELY as a single track.
-    // This stops any old playlist/Mix from triggering a "Next" event.
     console.log("Starting track:", videoId);
     player.loadVideoById(videoId);
 
-    // 2. Load the Mix in the background (Seamless Reload)
-    // We wait 3 seconds to let the first video settle, then we reload the player
-    // with the Mix ID but at the EXACT SECOND we left off.
+    // 2. Queue the Mix in the background (CUE, not LOAD)
+    // We wait 3 seconds to let the first video settle, then we cue the Mix.
     setTimeout(function() {
-        if (player.loadPlaylist && player.getCurrentTime) {
-            var currentTime = player.getCurrentTime();
-            console.log("Seamlessly switching to Mix (RD) at second:", currentTime);
-            
-            player.loadPlaylist({
+        if (player.cuePlaylist) {
+            console.log("Cuing background Mix (RD)...");
+            player.cuePlaylist({
                 'list': 'RD' + videoId,
                 'listType': 'playlist',
                 'index': 0,
-                'startSeconds': currentTime,
+                'startSeconds': 0,
                 'suggestedQuality': 'default'
             });
 
@@ -324,10 +319,8 @@ function playRadio(videoId, isResume) {
                             localStorage.setItem('kp_cached_queue', JSON.stringify(pl));
                         } catch(e) {}
                         
-                        var queueOverlay = document.getElementById('overlay-queue');
-                        if (queueOverlay && queueOverlay.classList.contains('active')) {
-                            updateQueueList();
-                        }
+                        // Force UI Refresh
+                        updateQueueList();
                         clearInterval(pollInterval);
                     }
                 }
