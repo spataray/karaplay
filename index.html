@@ -21,7 +21,7 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag" style="position: fixed; bottom: 5px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.2); z-index: 1000; font-family: monospace;">v1.5.2 (2026-03-21 13:55 HST)</div>
+        <div id="version-tag" style="position: fixed; bottom: 5px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.2); z-index: 1000; font-family: monospace;">v1.5.3 (2026-03-21 14:05 HST)</div>
         
         <!-- Sidebar (Driver Side) -->
         <div id="sidebar">
@@ -73,14 +73,18 @@
         
         <div style="width:100%; max-width:600px; display:flex; flex-direction:column; gap:20px;">
             <div style="display:flex; flex-direction:column; gap:10px;">
-                <span style="font-size:1.2rem; opacity:0.7;">YouTube API Key</span>
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <input type="password" id="settings-api-key" placeholder="Paste API Key here..." style="flex:1; background:#222; border:2px solid #444; color:white; padding:15px; border-radius:10px; font-size:1.2rem;">
-                    <button onclick="toggleApiKeyVisibility()" style="background:#333; color:white; border:none; padding:15px; border-radius:10px; font-size:1.5rem; cursor:pointer;" title="Show/Hide">👁️</button>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:1.2rem; opacity:0.7;">YouTube API Key</span>
+                    <span id="key-length-indicator" style="font-size:1rem; opacity:0.5; font-family:monospace;">Length: 0</span>
                 </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="password" id="settings-api-key" oninput="updateKeyLength()" placeholder="Paste API Key here..." style="flex:1; background:#222; border:2px solid #444; color:white; padding:15px; border-radius:10px; font-size:1.2rem;">
+                    <button onclick="toggleApiKeyVisibility()" style="background:#333; color:white; border:none; padding:15px; border-radius:10px; font-size:1.5rem; cursor:pointer;">👁️</button>
+                </div>
+                <div id="test-result" style="font-size:1rem; min-height:1.2rem; text-align:center;"></div>
                 <div style="display:flex; gap:10px;">
-                    <button onclick="saveApiKey()" style="flex:1; background:var(--accent-color); color:black; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem;">SAVE KEY</button>
-                    <button onclick="openOverlay('overlay-sync')" style="flex:1; background:#444; color:white; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem;">HOW TO SYNC</button>
+                    <button onclick="testApiKey()" style="flex:1; background:#444; color:white; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem;">TEST KEY</button>
+                    <button onclick="saveApiKey()" style="flex:1; background:var(--accent-color); color:black; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem;">SAVE & RELOAD</button>
                 </div>
             </div>
 

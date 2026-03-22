@@ -114,6 +114,46 @@ function toggleApiKeyVisibility() {
     }
 }
 
+function updateKeyLength() {
+    var input = document.getElementById('settings-api-key');
+    var indicator = document.getElementById('key-length-indicator');
+    if (input && indicator) {
+        indicator.innerText = "Length: " + input.value.trim().length;
+    }
+}
+
+function testApiKey() {
+    var key = document.getElementById('settings-api-key').value.trim();
+    var resultEl = document.getElementById('test-result');
+    if (!key) {
+        alert("Enter a key to test.");
+        return;
+    }
+    
+    if (resultEl) {
+        resultEl.innerHTML = '<span style="color:yellow;">Testing...</span>';
+    }
+
+    var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=test&maxResults=1&key=' + key;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                if (resultEl) resultEl.innerHTML = '<span style="color:lime;">✅ Key is working!</span>';
+            } else {
+                var msg = "❌ Failed (Status " + xhr.status + ")";
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    if (data.error && data.error.message) msg = "❌ " + data.error.message;
+                } catch(e) {}
+                if (resultEl) resultEl.innerHTML = '<span style="color:red; font-size:0.9rem;">' + msg + '</span>';
+            }
+        }
+    };
+    xhr.send();
+}
+
 function saveApiKey() {
     var key = document.getElementById('settings-api-key').value.trim();
     if (!key) {
