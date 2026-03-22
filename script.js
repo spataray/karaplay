@@ -484,6 +484,75 @@ function getQueryParam(name) {
     return null;
 }
 
+// ── Search History Management ──
+var searchHistory = [];
+try {
+    var savedHistory = localStorage.getItem('kp_search_history');
+    if (savedHistory) searchHistory = JSON.parse(savedHistory);
+} catch(e) {}
+
+function saveToHistory(videoId, title, author, thumb) {
+    // Check for duplicates
+    for (var i = 0; i < searchHistory.length; i++) {
+        if (searchHistory[i].id === videoId) {
+            searchHistory.splice(i, 1); // Remove existing to move to top
+            break;
+        }
+    }
+    
+    // Add to top
+    searchHistory.unshift({
+        id: videoId,
+        title: title,
+        author: author,
+        thumb: thumb
+    });
+    
+    // Keep last 10
+    if (searchHistory.length > 10) searchHistory.pop();
+    
+    try {
+        localStorage.setItem('kp_search_history', JSON.stringify(searchHistory));
+    } catch(e) {}
+}
+
+function loadSearchHistory() {
+    var resultsEl = document.getElementById('search-results');
+    var input = document.getElementById('search-input');
+    
+    // Only show history if input is empty
+    if (input && input.value.trim().length > 0) return;
+    
+    if (!resultsEl) return;
+    
+    if (searchHistory.length === 0) {
+        resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.3; font-size:1.5rem;">Results will appear here</div>';
+        return;
+    }
+
+    resultsEl.innerHTML = '<div style="font-size:1.2rem; opacity:0.5; margin-bottom:10px; padding-left:10px; border-left:4px solid var(--accent-color);">Recently Found</div>';
+    
+    for (var i = 0; i < searchHistory.length; i++) {
+        (function(item) {
+            var div = document.createElement('div');
+            div.className = 'search-item';
+            div.onclick = function() { 
+                saveToHistory(item.id, item.title, item.author, item.thumb); // Move to top
+                playRadio(item.id); 
+            };
+
+            div.innerHTML = 
+                '<img src="' + item.thumb + '">' +
+                '<div class="search-item-info">' +
+                    '<div class="search-item-title">' + escHtml(item.title) + '</div>' +
+                    '<div class="search-item-author">' + escHtml(item.author) + '</div>' +
+                '</div>';
+            
+            resultsEl.appendChild(div);
+        })(searchHistory[i]);
+    }
+}
+
 // ── Search Logic ──
 function doSearch() {
     var input = document.getElementById('search-input');
@@ -538,7 +607,10 @@ function doSearch() {
 
                                 var div = document.createElement('div');
                                 div.className = 'search-item';
-                                div.onclick = function() { playRadio(id); };
+                                div.onclick = function() { 
+                                    saveToHistory(id, item.snippet.title, item.snippet.channelTitle, item.snippet.thumbnails.medium.url);
+                                    playRadio(id); 
+                                };
 
                                 div.innerHTML = 
                                     '<img src="' + item.snippet.thumbnails.medium.url + '">' +
@@ -575,10 +647,14 @@ function openOverlay(id) {
     if (el) el.classList.add('active');
     
     if (id === 'overlay-search') {
-        setTimeout(function() { 
-            var si = document.getElementById('search-input');
-            if (si) si.focus(); 
-        }, 200);
+        var si = document.getElementById('search-input');
+        if (si) {
+            si.oninput = function() {
+                if (si.value.trim().length === 0) loadSearchHistory();
+            };
+            setTimeout(function() { si.focus(); }, 200);
+        }
+        loadSearchHistory();
     }
 
     if (id === 'overlay-queue') {
