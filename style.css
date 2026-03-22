@@ -313,9 +313,15 @@ iframe {
     transition: background 0.2s, border-color 0.2s;
     cursor: pointer;
     pointer-events: auto;
+    position: relative;
 }
 
-.search-item * {
+/* Ensure the interactive areas capture clicks, but sub-text doesn't block them */
+.search-item-info, .cancel-btn {
+    pointer-events: auto;
+}
+
+.search-item img, .search-item-title, .search-item-author {
     pointer-events: none;
 }
 

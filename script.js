@@ -445,10 +445,9 @@ function doSearch() {
 
                             var div = document.createElement('div');
                             div.className = 'search-item';
-                            div.setAttribute('onclick', 'playRadio("' + id + '")');
                             div.innerHTML = 
                                 '<img src="' + thumb + '">' +
-                                '<div class="search-item-info">' +
+                                '<div class="search-item-info" onclick="playRadio(\'' + id + '\')">' +
                                     '<div class="search-item-title">' + escHtml(title) + '</div>' +
                                     '<div class="search-item-author">' + escHtml(author) + '</div>' +
                                 '</div>';
