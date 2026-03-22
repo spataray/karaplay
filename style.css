@@ -200,6 +200,15 @@ iframe {
     pointer-events: auto;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    overflow-y: auto; /* Allow scrolling if content is too tall */
+    box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+    .overlay {
+        padding: 40px 20px;
+        justify-content: flex-start; /* Start from top on mobile */
+    }
 }
 
 .overlay.active {
