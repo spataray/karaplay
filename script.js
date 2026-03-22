@@ -397,6 +397,9 @@ function doSearch() {
     var query = input.value.trim();
     if (!query) return;
 
+    // Dismiss keyboard on touch devices
+    input.blur();
+
     var resultsEl = document.getElementById('search-results');
     if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:2rem;">Searching...</div>';
 

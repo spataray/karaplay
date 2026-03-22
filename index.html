@@ -21,7 +21,7 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag" style="position: fixed; bottom: 5px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.2); z-index: 1000; font-family: monospace;">v1.7.9 (2026-03-21 19:34 HST)</div>
+        <div id="version-tag" style="position: fixed; bottom: 5px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.2); z-index: 1000; font-family: monospace;">v1.7.10 (2026-03-21 19:44 HST)</div>
         
         <!-- Fun Fact Overlay -->
         <div id="fun-fact-overlay">
@@ -102,13 +102,13 @@
                     <span id="key-length-indicator" style="font-size:1rem; opacity:0.5; font-family:monospace;">Length: 0</span>
                 </div>
                 <div style="display:flex; gap:10px; align-items:center;">
-                    <input type="password" id="settings-api-key" oninput="updateKeyLength()" placeholder="Paste API Key here..." style="flex:1; background:#222; border:2px solid #444; color:white; padding:15px; border-radius:10px; font-size:1.2rem;">
-                    <button onclick="toggleApiKeyVisibility()" style="background:#333; color:white; border:none; padding:15px; border-radius:10px; font-size:1.5rem; cursor:pointer;">👁️</button>
+                    <input type="password" id="settings-api-key" oninput="updateKeyLength()" placeholder="Paste API Key here..." style="flex:1; background:#222; border:2px solid #444; color:white; padding:15px; border-radius:10px; font-size:1.2rem; touch-action: manipulation;">
+                    <button onclick="toggleApiKeyVisibility()" style="background:#333; color:white; border:none; padding:15px; border-radius:10px; font-size:1.5rem; cursor:pointer; touch-action: manipulation;">👁️</button>
                 </div>
                 <div id="test-result" style="font-size:1rem; min-height:1.2rem; text-align:center;"></div>
                 <div style="display:flex; gap:10px;">
-                    <button onclick="testApiKey()" style="flex:1; background:#444; color:white; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem;">TEST KEY</button>
-                    <button onclick="saveApiKey()" style="flex:1; background:var(--accent-color); color:black; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem;">SAVE & RELOAD</button>
+                    <button onclick="testApiKey()" style="flex:1; background:#444; color:white; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem; cursor:pointer; touch-action: manipulation;">TEST KEY</button>
+                    <button onclick="saveApiKey()" style="flex:1; background:var(--accent-color); color:black; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem; cursor:pointer; touch-action: manipulation;">SAVE & RELOAD</button>
                 </div>
             </div>
 
@@ -116,15 +116,15 @@
 
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:1.5rem;">Driver Orientation</span>
-                <button id="btn-orientation" onclick="toggleOrientation()" style="background:#333; color:white; border:none; padding:15px 30px; border-radius:10px; font-size:1.2rem; width:180px;">LEFT (LHD)</button>
+                <button id="btn-orientation" onclick="toggleOrientation()" style="background:#333; color:white; border:none; padding:15px 30px; border-radius:10px; font-size:1.2rem; width:180px; cursor:pointer; touch-action: manipulation;">LEFT (LHD)</button>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:1.5rem;">Night Mode (Dimmer)</span>
-                <input type="checkbox" style="width:40px; height:40px;">
+                <input type="checkbox" style="width:40px; height:40px; cursor:pointer; touch-action: manipulation;">
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:1.5rem;">Show Video Background</span>
-                <input type="checkbox" checked style="width:40px; height:40px;">
+                <input type="checkbox" checked style="width:40px; height:40px; cursor:pointer; touch-action: manipulation;">
             </div>
         </div>
     </div>

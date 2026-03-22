@@ -108,6 +108,7 @@ iframe {
     justify-content: center;
     cursor: pointer;
     box-sizing: border-box;
+    touch-action: manipulation;
 }
 
 .side-btn:active {
@@ -126,6 +127,7 @@ iframe {
     gap: 5px;
     text-shadow: 0 4px 10px rgba(0,0,0,0.8);
     z-index: 20;
+    pointer-events: none;
 }
 
 #ui-layer.driver-right #dashboard {
@@ -160,6 +162,7 @@ iframe {
     gap: 30px;
     pointer-events: auto;
     z-index: 30;
+    touch-action: manipulation;
 }
 
 #ui-layer.driver-right #media-bar {
@@ -171,6 +174,7 @@ iframe {
 #track-info {
     flex: 1;
     min-width: 0;
+    pointer-events: none;
 }
 
 #ui-layer.driver-right #track-info {
@@ -206,6 +210,7 @@ iframe {
     display: flex;
     align-items: center;
     justify-content: center;
+    touch-action: manipulation;
 }
 
 .media-btn:active {
@@ -228,7 +233,7 @@ iframe {
     pointer-events: auto;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    overflow-y: auto; /* Allow scrolling if content is too tall */
+    overflow-y: hidden; /* Only the results container should scroll */
     box-sizing: border-box;
 }
 
@@ -261,6 +266,7 @@ iframe {
     transition: all 0.2s;
     z-index: 9999; /* Ensure it is on the very top */
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    touch-action: manipulation;
 }
 
 .close-btn:active {
@@ -287,6 +293,7 @@ iframe {
     font-size: 2.5rem;
     margin-bottom: 40px;
     outline: none;
+    touch-action: manipulation;
 }
 
 #search-input:focus {
@@ -296,11 +303,13 @@ iframe {
 #search-results, #queue-list {
     width: 100%;
     max-width: 1000px;
+    flex: 1; /* Occupy remaining space */
     display: flex;
     flex-direction: column;
     gap: 15px;
     overflow-y: auto;
-    padding-top: 120px; /* Clear the large close-btn */
+    padding-top: 10px; /* Adjust padding since overlay is hidden overflow */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling for older iOS/WebViews */
 }
 
 .search-item {
@@ -315,15 +324,16 @@ iframe {
     cursor: pointer;
     pointer-events: auto;
     position: relative;
+    touch-action: manipulation;
 }
 
-/* Ensure the interactive areas capture clicks, but sub-text doesn't block them */
-.search-item-info, .cancel-btn {
-    pointer-events: auto;
-}
-
-.search-item img, .search-item-title, .search-item-author {
+/* Ensure only the main item and cancel button are interactive */
+.search-item-info, .search-item img, .search-item-title, .search-item-author {
     pointer-events: none;
+}
+
+.cancel-btn {
+    pointer-events: auto;
 }
 
 .search-item:active {
@@ -355,6 +365,7 @@ iframe {
     margin-left: 20px;
     transition: all 0.2s;
     flex-shrink: 0;
+    touch-action: manipulation;
 }
 
 .cancel-btn:active {
