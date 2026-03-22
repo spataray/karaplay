@@ -424,26 +424,24 @@ function doSearch() {
                         }
 
                         for (var i = 0; i < data.items.length; i++) {
-                            (function() {
-                                var item = data.items[i];
-                                var id = item.id.videoId;
-                                if (!id) return;
+                            var item = data.items[i];
+                            var id = item.id.videoId;
+                            if (!id) continue;
 
-                                var title = item.snippet.title;
-                                var author = item.snippet.channelTitle;
-                                var thumb = item.snippet.thumbnails.medium.url;
+                            var title = item.snippet.title;
+                            var author = item.snippet.channelTitle;
+                            var thumb = item.snippet.thumbnails.medium.url;
 
-                                var div = document.createElement('div');
-                                div.className = 'search-item';
-                                div.onclick = function() { playRadio(id); };
-                                div.innerHTML = 
-                                    '<img src="' + thumb + '">' +
-                                    '<div class="search-item-info">' +
-                                        '<div class="search-item-title">' + escHtml(title) + '</div>' +
-                                        '<div class="search-item-author">' + escHtml(author) + '</div>' +
-                                    '</div>';
-                                resultsEl.appendChild(div);
-                            })();
+                            var div = document.createElement('div');
+                            div.className = 'search-item';
+                            div.setAttribute('onclick', 'playRadio("' + id + '")');
+                            div.innerHTML = 
+                                '<img src="' + thumb + '">' +
+                                '<div class="search-item-info">' +
+                                    '<div class="search-item-title">' + escHtml(title) + '</div>' +
+                                    '<div class="search-item-author">' + escHtml(author) + '</div>' +
+                                '</div>';
+                            resultsEl.appendChild(div);
                         }
                     } catch(e) {
                         resultsEl.innerHTML = '<div style="color:red; text-align:center;">Parse error.</div>';
@@ -532,31 +530,29 @@ function updateQueueList() {
                     if (resultsEl) {
                         resultsEl.innerHTML = '';
                         for (var j = 0; j < idsToFetch.length; j++) {
-                            (function() {
-                                var vid = idsToFetch[j];
-                                var snippet = videoDetails[vid];
-                                if (!snippet) return;
+                            var vid = idsToFetch[j];
+                            var snippet = videoDetails[vid];
+                            if (!snippet) continue;
 
-                                var actualIndex = startIdx + j;
-                                var isCurrent = actualIndex === currentIndex;
-                                
-                                var div = document.createElement('div');
-                                div.className = 'search-item' + (isCurrent ? ' playing' : '');
-                                div.onclick = function() { playQueueItem(actualIndex); };
-                                
-                                var title = snippet.title;
-                                var author = snippet.channelTitle;
-                                var thumb = snippet.thumbnails.default ? snippet.thumbnails.default.url : '';
+                            var actualIndex = startIdx + j;
+                            var isCurrent = actualIndex === currentIndex;
+                            
+                            var div = document.createElement('div');
+                            div.className = 'search-item' + (isCurrent ? ' playing' : '');
+                            div.setAttribute('onclick', 'playQueueItem(' + actualIndex + ')');
+                            
+                            var title = snippet.title;
+                            var author = snippet.channelTitle;
+                            var thumb = snippet.thumbnails.default ? snippet.thumbnails.default.url : '';
 
-                                div.innerHTML = 
-                                    '<img src="' + thumb + '">' +
-                                    '<div class="search-item-info">' +
-                                        '<div class="search-item-title">' + (isCurrent ? '▶ ' : '') + escHtml(title) + '</div>' +
-                                        '<div class="search-item-author">' + escHtml(author) + '</div>' +
-                                    '</div>' +
-                                    (isCurrent ? '<div style="color:var(--accent-color); font-weight:bold; margin-left: 20px;">NOW PLAYING</div>' : '');
-                                resultsEl.appendChild(div);
-                            })();
+                            div.innerHTML = 
+                                '<img src="' + thumb + '">' +
+                                '<div class="search-item-info">' +
+                                    '<div class="search-item-title">' + (isCurrent ? '▶ ' : '') + escHtml(title) + '</div>' +
+                                    '<div class="search-item-author">' + escHtml(author) + '</div>' +
+                                '</div>' +
+                                (isCurrent ? '<div style="color:var(--accent-color); font-weight:bold; margin-left: 20px;">NOW PLAYING</div>' : '');
+                            resultsEl.appendChild(div);
                         }
                     }
                 } catch(e) {
