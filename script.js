@@ -245,7 +245,14 @@ function doSearch() {
                         resultsEl.innerHTML = '<div style="color:red; text-align:center;">Parse error.</div>';
                     }
                 } else {
-                    resultsEl.innerHTML = '<div style="color:red; text-align:center;">Error: ' + xhr.status + '</div>';
+                    var errorMsg = "Search failed: Status " + xhr.status;
+                    try {
+                        var errorData = JSON.parse(xhr.responseText);
+                        if (errorData.error && errorData.error.message) {
+                            errorMsg = "Google Error: " + errorData.error.message;
+                        }
+                    } catch(e) {}
+                    resultsEl.innerHTML = '<div style="color:red; text-align:center; font-size:1.2rem; padding:20px;">' + errorMsg + '</div>';
                 }
             }
         }
