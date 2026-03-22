@@ -58,11 +58,14 @@ function onPlayerStateChange(event) {
             try {
                 localStorage.setItem('kp_last_vid', videoId);
                 
-                // Save full queue for resume
+                // Save full queue only if it changed
                 if (player.getPlaylist) {
                     var pl = player.getPlaylist();
                     if (pl && pl.length > 0) {
-                        localStorage.setItem('kp_cached_queue', JSON.stringify(pl));
+                        var cached = localStorage.getItem('kp_cached_queue');
+                        if (JSON.stringify(pl) !== cached) {
+                            localStorage.setItem('kp_cached_queue', JSON.stringify(pl));
+                        }
                     }
                 }
             } catch(e) {}
@@ -260,7 +263,7 @@ function playRadio(videoId, isResume) {
     videoId = String(videoId).trim();
     currentVideoId = videoId;
 
-    // If resuming, check if we have a cached queue
+    // RESUME LOGIC
     if (isResume) {
         try {
             var cachedQueue = localStorage.getItem('kp_cached_queue');
@@ -279,11 +282,14 @@ function playRadio(videoId, isResume) {
         } catch(e) {}
     }
 
-    // Step 1: Immediate Playback (Forces interaction/start)
-    console.log("Executing loadVideoById:", videoId);
+    // NEW PLAYBACK LOGIC (Fixes instant-skip)
+    // 1. Play the chosen song IMMEDIATELY as a single track.
+    // This stops any old playlist/Mix from triggering a "Next" event.
+    console.log("Starting track:", videoId);
     player.loadVideoById(videoId);
 
-    // Step 2: Load the Mix in the background to build the queue
+    // 2. Queue the Mix in the background (CUE, not LOAD)
+    // We wait 3 seconds to let the first video settle, then we capture the "Up Next" list.
     setTimeout(function() {
         if (player.cuePlaylist) {
             console.log("Cuing background Mix (RD)...");
@@ -295,7 +301,7 @@ function playRadio(videoId, isResume) {
                 'suggestedQuality': 'default'
             });
 
-            // CAPTURE STRATEGY: Wait for the player to resolve the Mix IDs
+            // CAPTURE STRATEGY: Wait for the Mix to resolve its IDs
             var pollCount = 0;
             var pollInterval = setInterval(function() {
                 pollCount++;
@@ -314,10 +320,10 @@ function playRadio(videoId, isResume) {
                         clearInterval(pollInterval);
                     }
                 }
-                if (pollCount > 20) clearInterval(pollInterval);
+                if (pollCount > 30) clearInterval(pollInterval); // 15s timeout
             }, 500);
         }
-    }, 1500);
+    }, 3000); 
     
     if (!isResume) closeAllOverlays();
 }
