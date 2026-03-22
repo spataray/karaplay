@@ -307,6 +307,12 @@ iframe {
     align-items: center;
     border: 2px solid transparent;
     transition: background 0.2s, border-color 0.2s;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.search-item * {
+    pointer-events: none;
 }
 
 .search-item:active {
