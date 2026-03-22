@@ -227,7 +227,7 @@ function onPlayerError(event) {
 }
 
 // ── Radio Mode Logic ──
-function playRadio(videoId) {
+function playRadio(videoId, isResume) {
     if (!playerReady || !videoId) return;
 
     videoId = String(videoId).trim();
@@ -235,27 +235,69 @@ function playRadio(videoId) {
 
     console.log("Playing Radio for:", videoId);
 
-    // Force the specific video to play FIRST
-    player.loadVideoById({
-        videoId: videoId,
-        startSeconds: 0,
+    // Step 1: Load the Smart Radio Mix
+    player.loadPlaylist({
+        list: 'RD' + videoId,
+        listType: 'playlist',
+        index: 0,
         suggestedQuality: 'default'
     });
 
-    // Then, after a short delay to ensure 'loadVideoById' registered, 
-    // load the Radio mix to populate the queue.
-    setTimeout(function() {
-        player.cuePlaylist({
-            list: 'RD' + videoId,
-            listType: 'playlist',
-            index: 0,
-            startSeconds: 0,
-            suggestedQuality: 'default'
-        });
+    // Step 2: "Wait and Jump" Logic
+    // The RD mix doesn't always put the seed song first. 
+    // We poll for a few seconds to find our song in the list and force a jump.
+    var checkCount = 0;
+    var maxChecks = 20; // 10 seconds total
+    var jumpDone = false;
+
+    var checkInterval = setInterval(function() {
+        if (!player || !player.getPlaylist || jumpDone) {
+            clearInterval(checkInterval);
+            return;
+        }
+
+        var playlist = player.getPlaylist();
+        var data = player.getVideoData();
+        var nowPlayingId = data ? data.video_id : "";
+
+        // If we're already playing the right song, we're done!
+        if (nowPlayingId === videoId) {
+            console.log("Confirmed: Playing correct song.");
+            jumpDone = true;
+            clearInterval(checkInterval);
+            return;
+        }
+
+        // Search the newly loaded playlist for our target song
+        if (playlist && playlist.length > 0) {
+            var targetIndex = -1;
+            for (var i = 0; i < playlist.length; i++) {
+                if (playlist[i] === videoId) {
+                    targetIndex = i;
+                    break;
+                }
+            }
+
+            if (targetIndex !== -1) {
+                console.log("Found target at index " + targetIndex + ". Jumping...");
+                player.playVideoAt(targetIndex);
+                jumpDone = true;
+                clearInterval(checkInterval);
+                return;
+            }
+        }
+
+        checkCount++;
+        if (checkCount >= maxChecks) {
+            console.warn("Target song not found in Mix. Forcing direct load.");
+            player.loadVideoById(videoId);
+            clearInterval(checkInterval);
+        }
     }, 500);
 
-    closeAllOverlays();
+    if (!isResume) closeAllOverlays();
 }
+
 // ── Track Info ──
 function updateTrackInfo() {
     if (!player || !player.getVideoData) return;
