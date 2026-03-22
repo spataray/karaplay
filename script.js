@@ -35,12 +35,118 @@ function onPlayerStateChange(event) {
         updateTrackInfo();
         showUpNextToast();
         
+        // Fun Fact Overlay
+        var data = player.getVideoData();
+        if (data && data.title) {
+            showFunFact(data.title, data.author);
+        }
+        
         // Refresh queue if overlay is open
         var queueOverlay = document.getElementById('overlay-queue');
         if (queueOverlay && queueOverlay.classList.contains('active')) {
             updateQueueList();
         }
     }
+}
+
+var lastFactVideoId = "";
+
+function showFunFact(rawTitle, artist) {
+    if (!player || !player.getVideoData) return;
+    var videoId = player.getVideoData().video_id;
+    if (videoId === lastFactVideoId) return; // Don't show twice for same video
+    lastFactVideoId = videoId;
+
+    var clean = cleanTitle(rawTitle);
+    var query = clean + " " + artist + " song";
+    
+    // Wikipedia Search API
+    var url = "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=" + 
+              encodeURIComponent(query) + "&gsrlimit=1&prop=extracts&exintro&explaintext&exchars=300";
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                var pages = data.query.pages;
+                var pageId = Object.keys(pages)[0];
+                var extract = pages[pageId].extract;
+
+                if (extract && extract.length > 50) {
+                    displayFact(extract);
+                } else {
+                    // Fallback to Artist search
+                    fetchArtistFact(artist);
+                }
+            } catch(e) {
+                fetchArtistFact(artist);
+            }
+        }
+    };
+    xhr.send();
+}
+
+function fetchArtistFact(artist) {
+    var url = "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=" + 
+              encodeURIComponent(artist) + "&gsrlimit=1&prop=extracts&exintro&explaintext&exchars=300";
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                var pages = data.query.pages;
+                var pageId = Object.keys(pages)[0];
+                var extract = pages[pageId].extract;
+                if (extract) displayFact(extract);
+            } catch(e) {}
+        }
+    };
+    xhr.send();
+}
+
+function displayFact(text) {
+    var overlay = document.getElementById('fun-fact-overlay');
+    var textEl = document.getElementById('fact-text');
+    if (!overlay || !textEl) return;
+
+    textEl.innerText = text;
+    overlay.classList.add('active');
+
+    // Hide after 12 seconds
+    setTimeout(function() {
+        overlay.classList.remove('active');
+    }, 12000);
+}
+
+function cleanTitle(title) {
+    if (!title) return "";
+    var junk = [
+        /\(Official.*?\)/gi,
+        /\[Official.*?\]/gi,
+        /\(Lyric.*?\)/gi,
+        /\[Lyric.*?\]/gi,
+        /\(Video.*?\)/gi,
+        /\[Video.*?\]/gi,
+        /\(Audio.*?\)/gi,
+        /\[Audio.*?\]/gi,
+        /- Topic$/gi,
+        /HQ$/g,
+        /HD$/g,
+        /4K$/g,
+        /|.*$/g, // Remove everything after a pipe
+        /feat\..*$/gi,
+        /ft\..*$/gi
+    ];
+    
+    var clean = title;
+    for (var i = 0; i < junk.length; i++) {
+        clean = clean.replace(junk[i], "");
+    }
+    return clean.trim();
 }
 
 function showUpNextToast() {
