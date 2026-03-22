@@ -28,22 +28,42 @@ function onYouTubeIframeAPIReady() {
 function onPlayerReady(event) {
     playerReady = true;
     console.log("Karaplay Ready");
+
+    // Auto-resume from last session
+    try {
+        var lastVid = localStorage.getItem('kp_last_vid');
+        if (lastVid) {
+            console.log("Resuming last session:", lastVid);
+            playRadio(lastVid, true); // true = don't auto-start if you want it quiet, or keep as is
+        }
+    } catch(e) {}
 }
 
 var skipList = [];
+try {
+    var savedSkip = localStorage.getItem('kp_skip_list');
+    if (savedSkip) skipList = JSON.parse(savedSkip);
+} catch(e) {}
 
 function onPlayerStateChange(event) {
     if (event.data === 1) { // YT.PlayerState.PLAYING
         var data = player.getVideoData();
         var videoId = data ? data.video_id : "";
-        
+
+        // Save current track to resume later
+        if (videoId) {
+            try {
+                localStorage.setItem('kp_last_vid', videoId);
+            } catch(e) {}
+        }
+
         // Auto-skip if in skipList
         if (videoId && skipList.indexOf(videoId) !== -1) {
             console.log("Auto-skipping canceled track:", videoId);
             nextTrack();
             return;
         }
-
+// ... rest of function stays same
         updateTrackInfo();
         showUpNextToast();
         
@@ -589,9 +609,36 @@ function updateQueueList() {
     xhr.send();
 }
 
+function clearQueue() {
+    if (confirm("Clear your current radio session and queue?")) {
+        skipList = [];
+        try {
+            localStorage.removeItem('kp_last_vid');
+            localStorage.removeItem('kp_skip_list');
+        } catch(e) {}
+        
+        if (player && player.stopVideo) player.stopVideo();
+        
+        var titleEl = document.getElementById('track-title');
+        var authorEl = document.getElementById('track-author');
+        if (titleEl) titleEl.innerText = "Ready to Play";
+        if (authorEl) authorEl.innerText = "Search for a song to start radio";
+        
+        updateQueueList();
+        closeAllOverlays();
+    }
+}
+
+function saveSkipList() {
+    try {
+        localStorage.setItem('kp_skip_list', JSON.stringify(skipList));
+    } catch(e) {}
+}
+
 function cancelTrack(videoId) {
     if (videoId && skipList.indexOf(videoId) === -1) {
         skipList.push(videoId);
+        saveSkipList();
         updateQueueList();
     }
 }
