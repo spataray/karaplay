@@ -104,6 +104,16 @@ function toggleOrientation() {
     } catch(e) {}
 }
 
+function toggleApiKeyVisibility() {
+    var input = document.getElementById('settings-api-key');
+    if (!input) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+    } else {
+        input.type = 'password';
+    }
+}
+
 function saveApiKey() {
     var key = document.getElementById('settings-api-key').value.trim();
     if (!key) {
