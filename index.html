@@ -21,7 +21,7 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag" style="position: fixed; bottom: 10px; left: 10px; font-size: 14px; color: rgba(255,255,255,0.6); z-index: 1000; font-family: monospace; font-weight: bold; text-shadow: 1px 1px 2px black;">v1.9.6 (2026-03-22 13:40 HST)</div>
+        <div id="version-tag" style="position: fixed; bottom: 10px; left: 10px; font-size: 14px; color: rgba(255,255,255,0.6); z-index: 1000; font-family: monospace; font-weight: bold; text-shadow: 1px 1px 2px black;">v1.9.7 (2026-03-22 13:48 HST)</div>
         
         <!-- Fun Fact Overlay -->
         <div id="fun-fact-overlay">
@@ -35,8 +35,7 @@
         <!-- Sidebar (Driver Side) -->
         <div id="sidebar">
             <div id="sidebar-top">
-                <div class="side-btn" onclick="openOverlay('overlay-search')" title="Search">&#128269;</div>
-                <div class="side-btn" onclick="openOverlay('overlay-queue')" title="Queue">&#9776;</div>
+                <div class="side-btn" onclick="openOverlay('overlay-media')" title="Media Manager">&#127911;</div>
             </div>
 
             <div id="sidebar-bottom">
@@ -72,24 +71,32 @@
 
     </div>
 
-    <!-- Queue Overlay -->
-    <div id="overlay-queue" class="overlay">
+    <!-- Media Manager Overlay (Combined Search + Queue) -->
+    <div id="overlay-media" class="overlay">
         <div class="close-btn" onclick="closeAllOverlays()">&#x2715;</div>
-        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; max-width:1000px; margin-bottom:20px;">
-            <h1 style="font-size:3rem; margin:0; color:var(--accent-color);">Up Next</h1>
-            <button onclick="clearQueue()" style="background:#442222; color:#ff8888; border:2px solid #663333; padding:15px 30px; border-radius:15px; font-weight:bold; font-size:1.2rem; cursor:pointer;">CLEAR QUEUE</button>
-        </div>
-        <div id="queue-list" style="width:100%; max-width:1000px; display:flex; flex-direction:column; gap:15px;">
-            <div style="text-align:center; padding:40px; opacity:0.3; font-size:1.5rem;">Queue is empty</div>
-        </div>
-    </div>
+        
+        <div style="width:100%; max-width:1200px; display:flex; flex-direction:column; height:100%;">
+            <input type="search" id="search-input" placeholder="Search song or artist..." autocomplete="off" style="margin-bottom:20px;">
+            
+            <div style="display:flex; gap:30px; flex:1; overflow:hidden; text-align:left;">
+                <!-- Left Column: Search/Recently Found -->
+                <div style="flex:1; display:flex; flex-direction:column; height:100%; overflow-y:auto;">
+                    <div id="search-results">
+                        <div style="text-align:center; padding:40px; opacity:0.3; font-size:1.5rem;">Results will appear here</div>
+                    </div>
+                </div>
 
-    <!-- Search Overlay -->
-    <div id="overlay-search" class="overlay">
-        <div class="close-btn" onclick="closeAllOverlays()">&#x2715;</div>
-        <input type="search" id="search-input" placeholder="Search song or artist..." autocomplete="off">
-        <div id="search-results">
-            <div style="text-align:center; padding:40px; opacity:0.3; font-size:1.5rem;">Results will appear here</div>
+                <!-- Right Column: Queue (Up Next) -->
+                <div style="flex:1; display:flex; flex-direction:column; height:100%; border-left: 2px solid #333; padding-left:30px; overflow-y:auto;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h2 style="font-size:1.8rem; margin:0; color:var(--accent-color);">Up Next</h2>
+                        <button onclick="clearQueue()" style="background:#442222; color:#ff8888; border:1px solid #663333; padding:10px 20px; border-radius:10px; font-size:1rem; cursor:pointer;">CLEAR QUEUE</button>
+                    </div>
+                    <div id="queue-list" style="display:flex; flex-direction:column; gap:10px;">
+                        <div style="text-align:center; padding:40px; opacity:0.3; font-size:1.5rem;">Queue is empty</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -152,7 +159,7 @@
 
     <!-- Scripts -->
     <script src="config.js"></script>
-    <script src="script.js?v=1.9.6"></script>
+    <script src="script.js?v=1.9.7"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>

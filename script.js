@@ -49,6 +49,14 @@ try {
 
 function onPlayerStateChange(event) {
     console.log("Player State Change:", event.data);
+    
+    // 0 = YT.PlayerState.ENDED
+    if (event.data === 0) {
+        console.log("Song ended. Moving to next track...");
+        nextTrack();
+        return;
+    }
+
     if (event.data === 1) { // YT.PlayerState.PLAYING
         var data = player.getVideoData();
         var videoId = data ? data.video_id : "";
@@ -356,10 +364,51 @@ function togglePlay() {
 }
 
 function nextTrack() {
+    try {
+        var cached = localStorage.getItem('kp_cached_queue');
+        if (cached) {
+            var ids = JSON.parse(cached);
+            var data = player.getVideoData();
+            var currentId = data ? data.video_id : "";
+            var idx = ids.indexOf(currentId);
+            
+            // Find the next available (not canceled) track
+            var nextIdx = idx + 1;
+            while (nextIdx < ids.length) {
+                var nextId = ids[nextIdx];
+                if (skipList.indexOf(nextId) === -1) {
+                    console.log("Manual Next: Playing", nextId);
+                    player.loadVideoById(nextId);
+                    return;
+                }
+                nextIdx++;
+            }
+        }
+    } catch(e) {}
+    
+    // Fallback if manual fails
     if (player && player.nextVideo) player.nextVideo();
 }
 
 function prevTrack() {
+    try {
+        var cached = localStorage.getItem('kp_cached_queue');
+        if (cached) {
+            var ids = JSON.parse(cached);
+            var data = player.getVideoData();
+            var currentId = data ? data.video_id : "";
+            var idx = ids.indexOf(currentId);
+            
+            if (idx > 0) {
+                var prevId = ids[idx - 1];
+                console.log("Manual Prev: Playing", prevId);
+                player.loadVideoById(prevId);
+                return;
+            }
+        }
+    } catch(e) {}
+
+    // Fallback if manual fails
     if (player && player.previousVideo) player.previousVideo();
 }
 
