@@ -3,18 +3,6 @@
 var player;
 var playerReady = false;
 var currentVideoId = "";
-var syncDatabase;
-
-// Public Firebase config for Remote Sync (Safe to be public)
-var SYNC_FIREBASE_CONFIG = {
-    apiKey: "AIzaSyAJ6XE866VF-8VKn7iMtVQjMZTS_LPB9l4",
-    authDomain: "ta-station-remote.firebaseapp.com",
-    databaseURL: "https://ta-station-remote-default-rtdb.firebaseio.com",
-    projectId: "ta-station-remote",
-    storageBucket: "ta-station-remote.firebasestorage.app",
-    messagingSenderId: "805160829750",
-    appId: "1:805160829750:web:9a2a9e1cbf639562aba997"
-};
 
 // ── YouTube API Setup ──
 function onYouTubeIframeAPIReady() {
@@ -124,7 +112,7 @@ function saveApiKey() {
     }
     try {
         localStorage.setItem('yt_api_key', key);
-        alert("API Key saved! Page will reload.");
+        alert("API Key saved! Karaplay will now reload.");
         location.reload();
     } catch(e) {
         alert("Error saving: " + e.message);
@@ -137,7 +125,8 @@ function applySettings() {
     if (urlKey && urlKey.length > 10) {
         try {
             localStorage.setItem('yt_api_key', urlKey);
-            alert("API Key detected in URL and saved!");
+            alert("API Key received! Saving and reloading...");
+            // Redirect to clean URL
             var cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
             window.location.href = cleanUrl;
             return;
@@ -168,82 +157,6 @@ function applySettings() {
     } catch(e) {}
 }
 
-// ── Remote Sync Logic ──
-function initSync() {
-    if (typeof firebase === 'undefined') {
-        console.warn("Firebase SDK not loaded.");
-        return false;
-    }
-    // Use hardcoded config for sync service
-    if (firebase.apps.length === 0) {
-        firebase.initializeApp(SYNC_FIREBASE_CONFIG);
-    }
-    syncDatabase = firebase.database();
-    return true;
-}
-
-function startSyncReceiver() {
-    if (!initSync()) {
-        alert("Remote Sync failed to initialize. Check internet connection.");
-        return;
-    }
-
-    var code = Math.floor(1000 + Math.random() * 9000).toString();
-    document.getElementById('sync-code-display').innerText = code;
-    document.getElementById('sync-receiver-ui').style.display = 'block';
-    
-    var baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-    document.getElementById('sync-url-display').innerText = baseUrl + "?sync";
-
-    var syncRef = syncDatabase.ref('sync/' + code);
-    syncRef.on('value', function(snapshot) {
-        var data = snapshot.val();
-        if (data && data.key) {
-            localStorage.setItem('yt_api_key', data.key);
-            syncRef.remove(); // Cleanup
-            alert("Key received from phone! Karaplay will now reload.");
-            location.reload();
-        }
-    });
-}
-
-function sendSyncKey() {
-    if (!initSync()) {
-        alert("Sync service unavailable.");
-        return;
-    }
-
-    var code = document.getElementById('sync-input-code').value.trim();
-    var key = document.getElementById('sync-input-key').value.trim();
-
-    if (code.length !== 4 || !key) {
-        alert("Please enter a 4-digit code and the API key.");
-        return;
-    }
-
-    syncDatabase.ref('sync/' + code).set({
-        key: key,
-        timestamp: Date.now()
-    }, function(error) {
-        if (error) {
-            alert("Error sending key: " + error.message);
-        } else {
-            alert("Key sent successfully! Check your car screen.");
-        }
-    });
-}
-
-function checkSyncMode() {
-    var isSender = getQueryParam('sync') !== null;
-    if (isSender) {
-        openOverlay('overlay-sync');
-        document.getElementById('sync-sender-ui').style.display = 'block';
-        document.getElementById('sync-receiver-ui').style.display = 'none';
-        var ui = document.getElementById('ui-layer');
-        if (ui) ui.style.display = 'none';
-    }
-}
-
 function getQueryParam(name) {
     var query = window.location.search.substring(1);
     var vars = query.split("&");
@@ -269,8 +182,8 @@ function doSearch() {
     var activeKey = (typeof YT_API_KEY !== 'undefined') ? YT_API_KEY : window.YT_API_KEY;
 
     if (!activeKey) {
-        alert("YouTube API Key is missing. Add it in Settings or use Remote Sync.");
-        if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">API Key missing.</div>';
+        alert("API Key is missing. Tap 'How to Sync' in Settings for instructions.");
+        if (resultsEl) resultsEl.innerHTML = '<div style="color:red; text-align:center;">API Key missing. Check Settings.</div>';
         return;
     }
 
@@ -343,9 +256,10 @@ function openOverlay(id) {
     }
 
     if (id === 'overlay-sync') {
-        if (getQueryParam('sync') === null) {
-            startSyncReceiver();
-        }
+        var baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        var exampleUrl = baseUrl + "?key=YOUR_KEY";
+        var displayEl = document.getElementById('sync-example-url');
+        if (displayEl) displayEl.innerText = exampleUrl;
     }
 }
 
@@ -406,7 +320,6 @@ function getWeatherEmoji(code) {
 
 // ── Init ──
 applySettings();
-checkSyncMode();
 updateClock();
 setInterval(updateClock, 1000);
 syncWeather();
