@@ -17,11 +17,16 @@
         <div id="player"></div>
     </div>
 
+    <!-- Shadow Player (Hidden, used for resolving Mix IDs) -->
+    <div id="shadow-player-container" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; overflow:hidden;">
+        <div id="shadow-player"></div>
+    </div>
+
     <!-- Main UI Layer -->
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag" style="position: fixed; bottom: 10px; left: 10px; font-size: 14px; color: rgba(255,255,255,0.6); z-index: 1000; font-family: monospace; font-weight: bold; text-shadow: 1px 1px 2px black;">v2.1.1 (2026-03-22 15:14 HST)</div>
+        <div id="version-tag" style="position: fixed; bottom: 10px; left: 10px; font-size: 14px; color: rgba(255,255,255,0.6); z-index: 1000; font-family: monospace; font-weight: bold; text-shadow: 1px 1px 2px black;">v2.2.0 (2026-03-22 15:30 HST)</div>
         
         <!-- Ad Info Overlay (Shown when ad is playing) -->
         <div id="ad-info-overlay">
