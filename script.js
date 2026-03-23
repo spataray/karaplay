@@ -67,13 +67,11 @@ function onPlayerStateChange(event) {
                 localStorage.setItem('kp_last_vid', videoId);
                 
                 // Save full queue only if it changed
-                if (player.getPlaylist) {
-                    var pl = player.getPlaylist();
-                    if (pl && pl.length > 0) {
-                        var cached = localStorage.getItem('kp_cached_queue');
-                        if (JSON.stringify(pl) !== cached) {
-                            localStorage.setItem('kp_cached_queue', JSON.stringify(pl));
-                        }
+                var pl = idsInCurrentQueue(); 
+                if (pl && pl.length > 0) {
+                    var cached = localStorage.getItem('kp_cached_queue');
+                    if (JSON.stringify(pl) !== cached) {
+                        localStorage.setItem('kp_cached_queue', JSON.stringify(pl));
                     }
                 }
             } catch(e) {}
@@ -95,11 +93,19 @@ function onPlayerStateChange(event) {
         }
         
         // Refresh queue if overlay is open
-        var queueOverlay = document.getElementById('overlay-queue');
-        if (queueOverlay && queueOverlay.classList.contains('active')) {
+        var mediaOverlay = document.getElementById('overlay-media');
+        if (mediaOverlay && mediaOverlay.classList.contains('active')) {
             updateQueueList();
         }
     }
+}
+
+function idsInCurrentQueue() {
+    try {
+        var cached = localStorage.getItem('kp_cached_queue');
+        if (cached) return JSON.parse(cached);
+    } catch(e) {}
+    return [];
 }
 
 var lastFactVideoId = "";
@@ -203,14 +209,14 @@ function cleanTitle(title) {
 }
 
 function showUpNextToast() {
-    if (!player || !player.getPlaylist) return;
+    var ids = idsInCurrentQueue();
+    var data = player.getVideoData();
+    var currentId = data ? data.video_id : "";
+    var idx = ids.indexOf(currentId);
     
-    var playlist = player.getPlaylist();
-    var currentIndex = player.getPlaylistIndex();
+    if (ids.length === 0 || idx === -1 || idx >= ids.length - 1) return;
     
-    if (!playlist || currentIndex === -1 || currentIndex >= playlist.length - 1) return;
-    
-    var nextVideoId = playlist[currentIndex + 1];
+    var nextVideoId = ids[idx + 1];
     var activeKey = (typeof YT_API_KEY !== 'undefined') ? YT_API_KEY : window.YT_API_KEY;
     
     if (!activeKey) return;
@@ -245,7 +251,60 @@ function showUpNextToast() {
 
 function onPlayerError(event) {
     console.warn("Player Error:", event.data);
-    if (player && player.nextVideo) player.nextVideo();
+    nextTrack(); // Auto-skip if video is unplayable
+}
+
+function fetchVideoTitleAndSearchRelated(videoId) {
+    var activeKey = (typeof YT_API_KEY !== 'undefined') ? YT_API_KEY : window.YT_API_KEY;
+    if (!activeKey) return;
+
+    var url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet&id=' + videoId + '&key=' + activeKey;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                if (data.items && data.items.length > 0) {
+                    var title = data.items[0].snippet.title;
+                    var channel = data.items[0].snippet.channelTitle;
+                    console.log("Building manual queue for:", title);
+                    searchSimilar(title + " " + channel, videoId);
+                }
+            } catch(e) {}
+        }
+    };
+    xhr.send();
+}
+
+function searchSimilar(query, originalId) {
+    var activeKey = (typeof YT_API_KEY !== 'undefined') ? YT_API_KEY : window.YT_API_KEY;
+    if (!activeKey) return;
+
+    var cleanQuery = cleanTitle(query);
+    var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=' + 
+              encodeURIComponent(cleanQuery) + '&type=video&videoEmbeddable=true&maxResults=15&key=' + activeKey;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                var ids = [originalId];
+                if (data.items) {
+                    for (var i = 0; i < data.items.length; i++) {
+                        var vid = data.items[i].id.videoId;
+                        if (vid && vid !== originalId) ids.push(vid);
+                    }
+                }
+                console.log("Manual Queue built via search:", ids.length);
+                localStorage.setItem('kp_cached_queue', JSON.stringify(ids));
+                updateQueueList();
+            } catch(e) {}
+        }
+    };
+    xhr.send();
 }
 
 // ── Radio Mode Logic ──
@@ -271,7 +330,7 @@ function playRadio(videoId, isResume) {
     videoId = String(videoId).trim();
     currentVideoId = videoId;
 
-    // RESUME LOGIC
+    // RESUME LOGIC (Explicit queue provided)
     if (isResume) {
         try {
             var cachedQueue = localStorage.getItem('kp_cached_queue');
@@ -283,51 +342,23 @@ function playRadio(videoId, isResume) {
                     if (startIndex === -1) startIndex = 0;
                     
                     console.log("Resuming cached queue at index:", startIndex);
-                    player.loadPlaylist(ids, startIndex, 0, 'default');
+                    player.loadVideoById(lastVid); // Play current
                     return;
                 }
             }
         } catch(e) {}
     }
 
-    // 1. Play the chosen song IMMEDIATELY as a single track.
+    // MANUAL QUEUE LOGIC (v2.0.0)
+    // 1. Play the chosen song IMMEDIATELY.
     console.log("Starting track:", videoId);
     player.loadVideoById(videoId);
 
-    // 2. Queue the Mix in the background (CUE, not LOAD)
-    // We wait 3 seconds to let the first video settle, then we cue the Mix.
-    setTimeout(function() {
-        if (player.cuePlaylist) {
-            console.log("Cuing background Mix (RD)...");
-            player.cuePlaylist({
-                'list': 'RD' + videoId,
-                'listType': 'playlist',
-                'index': 0,
-                'startSeconds': 0,
-                'suggestedQuality': 'default'
-            });
-
-            // CAPTURE STRATEGY: Wait for the Mix to resolve its IDs for the UI
-            var pollCount = 0;
-            var pollInterval = setInterval(function() {
-                pollCount++;
-                if (player.getPlaylist) {
-                    var pl = player.getPlaylist();
-                    if (pl && pl.length > 1) {
-                        console.log("Mix IDs captured (" + pl.length + "). Caching.");
-                        try {
-                            localStorage.setItem('kp_cached_queue', JSON.stringify(pl));
-                        } catch(e) {}
-                        
-                        // Force UI Refresh
-                        updateQueueList();
-                        clearInterval(pollInterval);
-                    }
-                }
-                if (pollCount > 30) clearInterval(pollInterval); 
-            }, 500);
-        }
-    }, 3000); 
+    // 2. Fetch related songs via keyword search and populate the LOCAL queue.
+    // This doesn't use the YouTube playlist API, so it never skips or pauses.
+    if (!isResume) {
+        fetchVideoTitleAndSearchRelated(videoId);
+    }
     
     if (!isResume) closeAllOverlays();
 }
@@ -358,9 +389,8 @@ function togglePlay() {
 
 function nextTrack() {
     try {
-        var cached = localStorage.getItem('kp_cached_queue');
-        if (cached) {
-            var ids = JSON.parse(cached);
+        var ids = idsInCurrentQueue();
+        if (ids && ids.length > 0) {
             var data = player.getVideoData();
             var currentId = data ? data.video_id : "";
             var idx = ids.indexOf(currentId);
@@ -385,9 +415,8 @@ function nextTrack() {
 
 function prevTrack() {
     try {
-        var cached = localStorage.getItem('kp_cached_queue');
-        if (cached) {
-            var ids = JSON.parse(cached);
+        var ids = idsInCurrentQueue();
+        if (ids && ids.length > 0) {
             var data = player.getVideoData();
             var currentId = data ? data.video_id : "";
             var idx = ids.indexOf(currentId);
@@ -698,7 +727,7 @@ function openOverlay(id) {
     var el = document.getElementById(id);
     if (el) el.classList.add('active');
     
-    if (id === 'overlay-search') {
+    if (id === 'overlay-media') {
         var si = document.getElementById('search-input');
         if (si) {
             si.oninput = function() {
@@ -707,9 +736,6 @@ function openOverlay(id) {
             setTimeout(function() { si.focus(); }, 200);
         }
         loadSearchHistory();
-    }
-
-    if (id === 'overlay-queue') {
         updateQueueList();
     }
 
@@ -723,22 +749,19 @@ function openOverlay(id) {
 
 // ── Queue Management ──
 function updateQueueList() {
-    if (!player || !player.getPlaylist) return;
-    
-    var playlist = player.getPlaylist();
-    var currentIndex = player.getPlaylistIndex();
+    var idsToFetch = idsInCurrentQueue();
     var resultsEl = document.getElementById('queue-list');
     
-    if (!playlist || playlist.length === 0) {
+    if (!idsToFetch || idsToFetch.length === 0) {
         if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.3; font-size:1.5rem;">Queue is empty. Search for a song to start radio.</div>';
         return;
     }
 
     if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:2rem;">Loading Queue...</div>';
 
-    var startIdx = Math.max(0, currentIndex);
-    var endIdx = Math.min(playlist.length, startIdx + 15);
-    var idsToFetch = playlist.slice(startIdx, endIdx);
+    var data = player.getVideoData();
+    var currentId = data ? data.video_id : "";
+    var currentIndex = idsToFetch.indexOf(currentId);
 
     var activeKey = (typeof YT_API_KEY !== 'undefined') ? YT_API_KEY : window.YT_API_KEY;
     if (!activeKey) {
@@ -767,12 +790,12 @@ function updateQueueList() {
                                 var snippet = videoDetails[vid];
                                 if (!snippet) return;
 
-                                var isCurrent = actualIndex === currentIndex;
+                                var isCurrent = vid === currentId;
                                 var isCanceled = skipList.indexOf(vid) !== -1;
                                 
                                 var div = document.createElement('div');
                                 div.className = 'search-item' + (isCurrent ? ' playing' : '') + (isCanceled ? ' canceled' : '');
-                                div.onclick = function() { playQueueItem(actualIndex); };
+                                div.onclick = function() { playRadio(vid); };
 
                                 var thumb = snippet.thumbnails.default ? snippet.thumbnails.default.url : '';
                                 var html = 
@@ -802,7 +825,7 @@ function updateQueueList() {
                                 }
 
                                 resultsEl.appendChild(div);
-                            })(idsToFetch[j], startIdx + j);
+                            })(idsToFetch[j], j);
                         }
                     }
             } catch(e) {}
@@ -856,9 +879,9 @@ function cancelTrack(videoId) {
 }
 
 function playQueueItem(index) {
-    if (player && player.playVideoAt) {
-        player.playVideoAt(index);
-        closeAllOverlays();
+    var ids = idsInCurrentQueue();
+    if (index >= 0 && index < ids.length) {
+        playRadio(ids[index]);
     }
 }
 
