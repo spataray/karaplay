@@ -12,12 +12,17 @@ function checkAdStatus() {
     var data = player.getVideoData();
     var isCurrentlyAd = false;
 
-    // Method 1: Check Video Data
+    // Method 1: Check Video Data Properties
     if (data && (data.isAd || data.ad === 1)) {
         isCurrentlyAd = true;
     }
 
-    // Method 2: Internal Ad State (if available)
+    // Method 2: Check for 'Advertisement' in title
+    if (data && data.title && data.title.indexOf('Advertisement') !== -1) {
+        isCurrentlyAd = true;
+    }
+
+    // Method 3: Internal Ad State
     if (player.getAdState && player.getAdState() > 0) {
         isCurrentlyAd = true;
     }
@@ -30,15 +35,12 @@ function checkAdStatus() {
 }
 
 function toggleAdLayout(isAd) {
-    var uiLayer = document.getElementById('ui-layer');
-    if (!uiLayer) return;
-
     if (isAd) {
         console.log("AD DETECTED: Shrinking player...");
-        uiLayer.classList.add('ad-mode');
+        document.body.classList.add('ad-mode');
     } else {
         console.log("AD FINISHED: Returning to full screen.");
-        uiLayer.classList.remove('ad-mode');
+        document.body.classList.remove('ad-mode');
     }
 }
 
