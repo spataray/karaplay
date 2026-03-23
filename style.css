@@ -520,3 +520,72 @@ iframe {
         font-size: 1rem;
     }
 }
+
+/* Ad Mode Styles (v2.1.0) */
+#player-container {
+    transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.ad-mode #player-container {
+    width: 400px;
+    height: 225px;
+    top: 40px;
+    right: 40px;
+    left: auto;
+    z-index: 1000;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    border: 3px solid var(--accent-color);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+/* Reverse for RHD */
+.driver-right.ad-mode #player-container {
+    right: auto;
+    left: 40px;
+}
+
+#ad-info-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+    z-index: 5;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 100px;
+    box-sizing: border-box;
+}
+
+.ad-mode #ad-info-overlay {
+    display: flex;
+}
+
+#ad-info-content {
+    max-width: 800px;
+    text-align: center;
+}
+
+#ad-info-label {
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--accent-color);
+    letter-spacing: 5px;
+    margin-bottom: 20px;
+}
+
+#ad-info-title {
+    font-size: 3rem;
+    font-weight: 900;
+    margin-bottom: 30px;
+}
+
+#ad-info-text {
+    font-size: 1.5rem;
+    line-height: 1.6;
+    opacity: 0.7;
+}
+

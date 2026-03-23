@@ -3,6 +3,47 @@
 var player;
 var playerReady = false;
 var currentVideoId = "";
+var isAdPlaying = false;
+
+// ── Ad Detection & Layout ──
+function checkAdStatus() {
+    if (!player || !player.getVideoData) return;
+    
+    var data = player.getVideoData();
+    var isCurrentlyAd = false;
+
+    // Method 1: Check Video Data
+    if (data && (data.isAd || data.ad === 1)) {
+        isCurrentlyAd = true;
+    }
+
+    // Method 2: Internal Ad State (if available)
+    if (player.getAdState && player.getAdState() > 0) {
+        isCurrentlyAd = true;
+    }
+
+    // Update Layout if state changed
+    if (isCurrentlyAd !== isAdPlaying) {
+        isAdPlaying = isCurrentlyAd;
+        toggleAdLayout(isAdPlaying);
+    }
+}
+
+function toggleAdLayout(isAd) {
+    var uiLayer = document.getElementById('ui-layer');
+    if (!uiLayer) return;
+
+    if (isAd) {
+        console.log("AD DETECTED: Shrinking player...");
+        uiLayer.classList.add('ad-mode');
+    } else {
+        console.log("AD FINISHED: Returning to full screen.");
+        uiLayer.classList.remove('ad-mode');
+    }
+}
+
+// Start polling for ads
+setInterval(checkAdStatus, 1000);
 
 // ── YouTube API Setup ──
 function onYouTubeIframeAPIReady() {
@@ -49,6 +90,7 @@ try {
 
 function onPlayerStateChange(event) {
     console.log("Player State Change:", event.data);
+    checkAdStatus(); // Immediate check during state changes
     
     // 0 = YT.PlayerState.ENDED
     if (event.data === 0) {
