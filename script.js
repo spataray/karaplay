@@ -1,4 +1,4 @@
-// v2.5.0 (2026-03-28 15:00 HST): Added Lyrics Overlay via lyrics.ovh API.
+// v2.5.1 (2026-03-28 15:15 HST): Added Karaoke-style Auto-Scroll and semi-transparent lyrics.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -256,16 +256,48 @@ function cleanTitle(title) {
     return clean.trim();
 }
 
+var lyricsScrollInterval = null;
+
 function toggleLyrics() {
     var overlay = document.getElementById('overlay-lyrics');
     if (!overlay) return;
     
     if (overlay.classList.contains('active')) {
         overlay.classList.remove('active');
+        stopLyricsScroll();
     } else {
         overlay.classList.add('active');
         fetchLyrics();
     }
+}
+
+function stopLyricsScroll() {
+    if (lyricsScrollInterval) {
+        clearInterval(lyricsScrollInterval);
+        lyricsScrollInterval = null;
+    }
+}
+
+function startLyricsScroll() {
+    stopLyricsScroll();
+    var container = document.getElementById('lyrics-container');
+    if (!container) return;
+    
+    container.scrollTop = 0;
+    
+    // Wait 5 seconds for intro, then start slow crawl
+    setTimeout(function() {
+        if (!document.getElementById('overlay-lyrics').classList.contains('active')) return;
+        
+        lyricsScrollInterval = setInterval(function() {
+            container.scrollTop += 1;
+            
+            // If we reached the bottom, stop scrolling
+            if (container.scrollTop + container.clientHeight >= container.scrollHeight) {
+                stopLyricsScroll();
+            }
+        }, 150); // Adjust speed here (ms per pixel)
+    }, 5000);
 }
 
 function fetchLyrics() {
@@ -279,6 +311,7 @@ function fetchLyrics() {
     var contentEl = document.getElementById('lyrics-content');
     
     contentEl.innerText = "Searching for lyrics...";
+    stopLyricsScroll();
     
     // Try to split artist/title if YouTube title has a dash
     var songTitle = rawTitle;
@@ -304,6 +337,7 @@ function fetchLyrics() {
                     var resp = JSON.parse(xhr.responseText);
                     if (resp.lyrics) {
                         contentEl.innerText = resp.lyrics;
+                        startLyricsScroll();
                     } else {
                         contentEl.innerText = "Lyrics not found for this song.";
                     }
