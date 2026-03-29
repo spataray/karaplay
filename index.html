@@ -40,7 +40,7 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag">v2.9.5 (2026-03-28 19:30 HST)</div>
+        <div id="version-tag">v2.9.6 (2026-03-28 19:45 HST)</div>
         
         <!-- Sidebar (Fixed) -->
         <div id="sidebar">
@@ -63,6 +63,22 @@
             <div id="dashboard">
                 <div id="clock">00:00 AM</div>
                 <div id="weather">--°F</div>
+            </div>
+
+            <!-- Integrated Setup Widget (Only shown if no key) -->
+            <div id="setup-widget" style="display:none;">
+                <div class="setup-card">
+                    <div class="setup-info">
+                        <h2>API Key Required</h2>
+                        <p>Scan the code or paste your key to start.</p>
+                        <input type="password" id="setup-key-input" placeholder="Paste AIza... key">
+                        <button onclick="saveSetupKey()">SAVE & START</button>
+                    </div>
+                    <div class="setup-qr">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://spataray.github.io/karaplay/setup.html">
+                        <span>SCAN TO SETUP</span>
+                    </div>
+                </div>
             </div>
 
             <div id="up-next-toast">
@@ -123,22 +139,7 @@
         </div>
     </div>
 
-    <!-- API Key Setup Overlay -->
-    <div id="overlay-setup" class="overlay active" style="display:none; flex-direction:row; padding:40px; gap:40px;">
-        <div style="flex:1; text-align:left;">
-            <h1 style="font-size:3rem; color:var(--accent-color);">API Key Required</h1>
-            <p style="font-size:1.5rem; margin:20px 0;">Paste your YouTube API Key below. It stays private to your car.</p>
-            <input type="password" id="setup-key-input" style="width:100%; padding:20px; font-size:1.5rem; border-radius:10px; border:none; background:#222; color:white; margin-bottom:20px;">
-            <button onclick="saveSetupKey()" style="background:var(--accent-color); color:black; border:none; padding:20px 40px; border-radius:10px; font-size:1.5rem; font-weight:bold; cursor:pointer; width:100%;">SAVE & START</button>
-        </div>
-        <div style="width:300px; background:white; padding:20px; border-radius:20px; color:black; text-align:center;">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://spataray.github.io/karaplay/setup.html" style="width:200px; margin-bottom:15px;">
-            <b style="font-size:1.2rem;">SCAN TO SETUP</b>
-            <p style="font-size:0.9rem; margin-top:10px;">Scan with your phone for easy instructions and to sync your key.</p>
-        </div>
-    </div>
-
-    <script src="script.js?v=2.9.5"></script>
+    <script src="script.js?v=2.9.6"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
