@@ -26,7 +26,7 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag" style="position: fixed; bottom: 10px; left: 10px; font-size: 14px; color: rgba(255,255,255,0.6); z-index: 1000; font-family: monospace; font-weight: bold; text-shadow: 1px 1px 2px black;">v2.7.0 (2026-03-28 16:00 HST)</div>
+        <div id="version-tag" style="position: fixed; bottom: 10px; left: 10px; font-size: 14px; color: rgba(255,255,255,0.6); z-index: 1000; font-family: monospace; font-weight: bold; text-shadow: 1px 1px 2px black;">v2.7.1 (2026-03-28 16:15 HST)</div>
         
         <!-- API Key Setup Overlay -->
         <div id="overlay-setup" class="overlay active" style="display:none; flex-direction:row; padding:40px; gap:40px;">
@@ -182,17 +182,15 @@
                 <div id="lyrics-content">Loading lyrics...</div>
             </div>
             
-            <div id="lyrics-speed-controls" style="margin-top:30px; display:flex; align-items:center; gap:20px; pointer-events:auto;">
-                <button onclick="changeScrollSpeed(-25)" style="width:80px; height:80px; border-radius:20px; background:rgba(255,255,255,0.1); color:white; border:2px solid rgba(255,255,255,0.3); font-size:2.5rem; cursor:pointer; font-weight:bold;">+</button>
+            <div id="lyrics-speed-controls" style="margin-top:20px; display:flex; align-items:center; gap:15px; pointer-events:auto;">
+                <button onclick="changeScrollSpeed(-25)" style="width:60px; height:60px; border-radius:15px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.3); font-size:2rem; cursor:pointer; font-weight:bold;">+</button>
                 <div style="flex:1; text-align:center;">
-                    <div style="font-size:0.8rem; opacity:0.5; letter-spacing:2px;">SCROLL SPEED</div>
-                    <div id="speed-indicator" style="font-size:1.2rem; font-weight:bold; color:var(--accent-color);">150ms</div>
+                    <div style="font-size:0.7rem; opacity:0.5; letter-spacing:1px;">SPEED</div>
+                    <div id="speed-indicator" style="font-size:1rem; font-weight:bold; color:var(--accent-color);">150ms</div>
                 </div>
-                <button onclick="changeScrollSpeed(25)" style="width:80px; height:80px; border-radius:20px; background:rgba(255,255,255,0.1); color:white; border:2px solid rgba(255,255,255,0.3); font-size:2.5rem; cursor:pointer; font-weight:bold;">-</button>
+                <button onclick="changeScrollSpeed(25)" style="width:60px; height:60px; border-radius:15px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.3); font-size:2rem; cursor:pointer; font-weight:bold;">-</button>
             </div>
         </div>
-        
-        <div class="close-btn" onclick="toggleLyrics()">&#x2715;</div>
     </div>
 
     <!-- Sync Instructions Overlay -->
@@ -214,7 +212,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="script.js?v=2.7.0"></script>
+    <script src="script.js?v=2.7.1"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>

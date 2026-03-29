@@ -1,4 +1,4 @@
-// v2.7.0 (2026-03-28 16:00 HST): Side-by-Side Lyrics Mode (Video pushes right).
+// v2.7.1 (2026-03-28 16:15 HST): Narrow side-panel lyrics, no close button (mic toggles).
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
