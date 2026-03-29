@@ -1,4 +1,4 @@
-// v2.5.1 (2026-03-28 15:15 HST): Added Karaoke-style Auto-Scroll and semi-transparent lyrics.
+// v2.6.0 (2026-03-28 15:30 HST): Floating transparent lyrics, speed controls, and auto-play fixes.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -96,12 +96,13 @@ try {
 
 function onPlayerStateChange(event) {
     console.log("Player State Change:", event.data);
-    checkAdStatus();
     
     // 0 = YT.PlayerState.ENDED
     if (event.data === 0) {
         console.log("Song ended. Moving to next track...");
-        nextTrack();
+        setTimeout(function() {
+            nextTrack();
+        }, 500); // Small buffer before kick
         return;
     }
 
@@ -257,6 +258,20 @@ function cleanTitle(title) {
 }
 
 var lyricsScrollInterval = null;
+var scrollSpeed = 150; // ms per pixel
+
+function changeScrollSpeed(delta) {
+    scrollSpeed += delta;
+    if (scrollSpeed < 20) scrollSpeed = 20; // Max speed
+    if (scrollSpeed > 500) scrollSpeed = 500; // Min speed
+    console.log("New Scroll Speed:", scrollSpeed);
+    
+    // Restart scroll with new speed if active
+    var overlay = document.getElementById('overlay-lyrics');
+    if (overlay && overlay.classList.contains('active')) {
+        startLyricsScroll(true); // true = no delay
+    }
+}
 
 function toggleLyrics() {
     var overlay = document.getElementById('overlay-lyrics');
@@ -278,26 +293,25 @@ function stopLyricsScroll() {
     }
 }
 
-function startLyricsScroll() {
+function startLyricsScroll(noDelay) {
     stopLyricsScroll();
     var container = document.getElementById('lyrics-container');
     if (!container) return;
     
-    container.scrollTop = 0;
+    if (!noDelay) container.scrollTop = 0;
     
-    // Wait 5 seconds for intro, then start slow crawl
+    var delay = noDelay ? 0 : 5000;
+    
     setTimeout(function() {
         if (!document.getElementById('overlay-lyrics').classList.contains('active')) return;
         
         lyricsScrollInterval = setInterval(function() {
             container.scrollTop += 1;
-            
-            // If we reached the bottom, stop scrolling
             if (container.scrollTop + container.clientHeight >= container.scrollHeight) {
                 stopLyricsScroll();
             }
-        }, 150); // Adjust speed here (ms per pixel)
-    }, 5000);
+        }, scrollSpeed);
+    }, delay);
 }
 
 function fetchLyrics() {
@@ -511,6 +525,7 @@ function togglePlay() {
 }
 
 function nextTrack() {
+    console.log("Kicking next track...");
     try {
         var ids = idsInCurrentQueue();
         if (ids && ids.length > 0) {
@@ -519,18 +534,22 @@ function nextTrack() {
             var idx = ids.indexOf(currentId);
             
             var nextIdx = idx + 1;
-            while (nextIdx < ids.length) {
+            if (nextIdx < ids.length) {
                 var nextId = ids[nextIdx];
-                if (skipList.indexOf(nextId) === -1) {
-                    console.log("Manual Next: Playing", nextId);
-                    player.loadVideoById(nextId);
-                    return;
-                }
-                nextIdx++;
+                console.log("Auto-Play: Loading", nextId);
+                player.loadVideoById(nextId);
+                return;
             }
         }
-    } catch(e) {}
-    if (player && player.nextVideo) player.nextVideo();
+    } catch(e) {
+        console.error("NextTrack Error:", e);
+    }
+    
+    // Fallback if queue logic fails
+    if (player && player.nextVideo) {
+        console.log("Using YouTube Native Next");
+        player.nextVideo();
+    }
 }
 
 function prevTrack() {
