@@ -12,7 +12,7 @@
 </head>
 <body>
 
-    <!-- [LAYER 1] Lyrics Background Layer (Always there, but revealed by the push) -->
+    <!-- [LAYER 1] Lyrics Background -->
     <div id="lyrics-bg-layer">
         <div id="lyrics-container">
             <div id="lyrics-content">Loading lyrics...</div>
@@ -26,13 +26,13 @@
         </div>
     </div>
 
-    <!-- [LAYER 2] Background Video Player (Slides with Content) -->
+    <!-- [LAYER 2] Video Player -->
     <div id="player-container">
         <div id="player"></div>
     </div>
 
-    <!-- Shadow Player (Hidden) -->
-    <div id="shadow-player-container" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; overflow:hidden;">
+    <!-- Shadow Player -->
+    <div id="shadow-player-container" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;">
         <div id="shadow-player"></div>
     </div>
 
@@ -40,9 +40,9 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag">v2.9.0 (2026-03-28 18:00 HST)</div>
+        <div id="version-tag">v2.9.1 (2026-03-28 18:30 HST)</div>
         
-        <!-- Sidebar (Always Fixed Left) -->
+        <!-- Sidebar (Fixed) -->
         <div id="sidebar">
             <div id="sidebar-top">
                 <div class="side-btn" onclick="openOverlay('overlay-media')" title="Media Manager">&#127911;</div>
@@ -58,22 +58,18 @@
             </div>
         </div>
 
-        <!-- Sliding Content Wrapper (Moves right when lyrics open) -->
+        <!-- Sliding Wrapper -->
         <div id="content-wrapper">
-            <!-- Dashboard Info -->
             <div id="dashboard">
                 <div id="clock">00:00 AM</div>
                 <div id="weather">--°F</div>
             </div>
 
-            <!-- Up Next Toast (Restored here so it slides too) -->
             <div id="up-next-toast">
                 <div id="toast-label">UP NEXT</div>
                 <div id="toast-title">Song Title</div>
-                <div id="toast-history">Loading history...</div>
             </div>
 
-            <!-- Bottom Media Bar -->
             <div id="media-bar">
                 <div id="track-info">
                     <div id="track-title">Ready to Play</div>
@@ -84,7 +80,7 @@
 
     </div>
 
-    <!-- Overlays -->
+    <!-- Media Manager Overlay -->
     <div id="overlay-media" class="overlay">
         <div class="close-btn" onclick="closeAllOverlays()">&#x2715;</div>
         <div style="width:100%; max-width:1200px; display:flex; flex-direction:column; height:100%;">
@@ -102,6 +98,25 @@
         </div>
     </div>
 
+    <!-- Settings Overlay (Restored) -->
+    <div id="overlay-settings" class="overlay">
+        <div class="close-btn" onclick="closeAllOverlays()">&#x2715;</div>
+        <h1 style="font-size:3rem; margin-bottom:20px; color:var(--accent-color);">Settings</h1>
+        <div style="width:100%; max-width:600px; display:flex; flex-direction:column; gap:20px;">
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <label style="font-size:1.2rem; opacity:0.7;">YouTube API Key</label>
+                <input type="password" id="settings-api-key" placeholder="Paste API Key here..." style="background:#222; border:2px solid #444; color:white; padding:15px; border-radius:10px; font-size:1.2rem;">
+                <button onclick="saveApiKey()" style="background:var(--accent-color); color:black; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem; cursor:pointer;">SAVE & RELOAD</button>
+            </div>
+            <hr style="width:100%; border:0; border-top:1px solid #333;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:1.5rem;">Driver Orientation</span>
+                <button id="btn-orientation" onclick="toggleOrientation()" style="background:#333; color:white; border:none; padding:15px 30px; border-radius:10px; font-size:1.2rem; width:180px; cursor:pointer;">LEFT (LHD)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Key Setup Overlay -->
     <div id="overlay-setup" class="overlay active" style="display:none; flex-direction:row; padding:40px; gap:40px;">
         <div style="flex:1; text-align:left;">
             <h1 style="font-size:3rem; color:var(--accent-color);">API Key Required</h1>
@@ -115,7 +130,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=2.9.0"></script>
+    <script src="script.js?v=2.9.1"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>

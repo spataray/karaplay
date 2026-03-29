@@ -14,31 +14,29 @@ body, html {
     overflow: hidden; user-select: none;
 }
 
-/* [LAYER 1] BACKGROUND LYRICS (Revealed by push) */
+/* [LAYER 1] BACKGROUND LYRICS */
 #lyrics-bg-layer {
     position: absolute; top: 0; left: 280px; width: 30%; height: 100%;
     z-index: 1; display: flex; flex-direction: column;
     padding: 150px 30px 150px 30px; box-sizing: border-box;
     opacity: 0; transition: opacity 0.5s ease;
+    pointer-events: auto; /* Allow +/- clicks */
 }
-
 .lyrics-mode #lyrics-bg-layer { opacity: 1; }
-
 #lyrics-container { flex: 1; overflow: hidden; position: relative; }
 #lyrics-content {
     font-size: 1.8rem; line-height: 1.5; color: white;
-    text-shadow: 0 0 10px black; font-weight: bold; text-align: left;
+    text-shadow: 0 0 10px black; font-weight: bold;
 }
-
 #lyrics-speed-controls { margin-top: 20px; display: flex; align-items:center; gap:15px; }
 .speed-btn {
     width: 60px; height: 60px; border-radius: 15px;
     background: rgba(255,255,255,0.1); color: white;
-    border: 1px solid rgba(255,255,255,0.2); font-size: 1.5rem;
+    border: 1px solid rgba(255,255,255,0.2); font-size: 1.5rem; cursor: pointer;
 }
 .speed-label { flex: 1; text-align: center; font-size: 0.8rem; font-weight: bold; color: var(--accent-color); }
 
-/* [LAYER 2] VIDEO PLAYER (Slides) */
+/* [LAYER 2] VIDEO PLAYER */
 #player-container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5;
     pointer-events: none; transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -49,10 +47,10 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
 /* [LAYER 3] MAIN UI */
 #ui-layer {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
-    display: flex; pointer-events: none;
+    display: flex; pointer-events: none; /* Let clicks pass to sidebar/content */
 }
 
-/* Sidebar (Always Fixed) */
+/* Sidebar (Always Clickable) */
 #sidebar {
     width: 280px; height: 100%;
     background: linear-gradient(to right, rgba(0,0,0,0.9), transparent);
@@ -61,14 +59,14 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
     pointer-events: auto; z-index: 100;
 }
 
-/* Sliding Wrapper (Dashboard + Media Bar) */
+/* Sliding Content (Dashboard + Media Bar) */
 #content-wrapper {
     flex: 1; height: 100%; position: relative;
     transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none; /* Pass clicks to children */
 }
 .lyrics-mode #content-wrapper { transform: translateX(30%); }
 
-/* Dashboard Info */
 #dashboard {
     position: absolute; top: var(--safe-padding); left: 20px;
     z-index: 90; pointer-events: none;
@@ -76,26 +74,26 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
 #clock { font-size: 3.5rem; font-weight: 900; }
 #weather { font-size: 1.5rem; font-weight: bold; opacity: 0.8; }
 
-/* Media Bar */
 #media-bar {
     position: absolute; bottom: 0; left: 0; right: 0;
     height: 120px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-    padding: 20px 40px; display: flex; align-items: center; z-index: 20;
+    padding: 20px 40px; display: flex; align-items: center; 
+    z-index: 20; pointer-events: none;
 }
 #track-title { font-size: 2.5rem; font-weight: 900; color: var(--accent-color); }
 #track-author { font-size: 1.5rem; opacity: 0.7; }
 
-/* Up Next Toast */
+/* Up Next Toast - Gold Box */
 #up-next-toast {
-    position: absolute; top: 40px; right: 40px; width: 450px;
-    background: rgba(255, 204, 0, 0.95); border: 4px solid #fff; border-radius: 25px;
-    padding: 30px; z-index: 200; opacity: 0;
+    position: absolute; top: 40px; right: 40px; width: 400px;
+    background: rgba(255, 204, 0, 0.95); border: 4px solid #fff; border-radius: 20px;
+    padding: 25px; z-index: 200; opacity: 0; pointer-events: none;
     transform: translateX(100%); transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8); color: #000;
+    color: #000; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
 }
 #up-next-toast.active { opacity: 1; transform: translateX(0); }
-#toast-label { font-size: 1rem; font-weight: 900; letter-spacing: 3px; }
-#toast-title { font-size: 2rem; font-weight: 900; }
+#toast-label { font-size: 0.8rem; font-weight: 900; letter-spacing: 2px; }
+#toast-title { font-size: 1.6rem; font-weight: 900; }
 
 /* Sidebar Buttons */
 .side-btn {
