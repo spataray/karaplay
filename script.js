@@ -1,4 +1,4 @@
-// v3.0.0 (2026-03-28 21:00 HST): Unified Sliding Dashboard (Search, Lyrics, Settings).
+// v3.0.1 (2026-03-28 21:15 HST): Narrower 30% slide, fixed Up Next overlap.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;

@@ -12,7 +12,7 @@
 </head>
 <body class="dash-mode">
 
-    <!-- [LAYER 1] TOOLS BACKGROUND (Revealed by push) -->
+    <!-- [LAYER 1] TOOLS BACKGROUND -->
     <div id="tools-layer">
         
         <!-- Lyrics Panel -->
@@ -67,12 +67,12 @@
 
     </div>
 
-    <!-- [LAYER 2] Background Video Player (Slides) -->
+    <!-- [LAYER 2] Background Video Player -->
     <div id="player-container">
         <div id="player"></div>
     </div>
 
-    <!-- Shadow Player (Hidden) -->
+    <!-- Shadow Player -->
     <div id="shadow-player-container" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;">
         <div id="shadow-player"></div>
     </div>
@@ -81,9 +81,9 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag">v3.0.0 (2026-03-28 21:00 HST)</div>
+        <div id="version-tag">v3.0.1 (2026-03-28 21:15 HST)</div>
         
-        <!-- Sidebar (Fixed) -->
+        <!-- Sidebar -->
         <div id="sidebar">
             <div id="sidebar-top">
                 <div class="side-btn" id="btn-media-toggle" onclick="togglePanel('media')" title="Search">&#127911;</div>
@@ -101,6 +101,7 @@
 
         <!-- Sliding Content Wrapper -->
         <div id="content-wrapper">
+            <!-- Dashboard Info -->
             <div id="dashboard">
                 <div id="clock">00:00 AM</div>
                 <div id="weather">--°F</div>
@@ -121,11 +122,7 @@
                 </div>
             </div>
 
-            <div id="up-next-toast">
-                <div id="toast-label">UP NEXT</div>
-                <div id="toast-title">Song Title</div>
-            </div>
-
+            <!-- Bottom Media Bar -->
             <div id="media-bar">
                 <div id="track-info">
                     <div id="track-title">Ready to Play</div>
@@ -136,7 +133,7 @@
 
     </div>
 
-    <script src="script.js?v=3.0.0"></script>
+    <script src="script.js?v=3.0.1"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
