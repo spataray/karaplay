@@ -1,4 +1,4 @@
-// v2.9.4 (2026-03-28 19:15 HST): Restored full Queue Display logic.
+// v2.9.7 (2026-03-28 20:00 HST): Added YouTube Description Fallback for Thai lyrics.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -242,9 +242,11 @@ function startLyricsScroll(noDelay) {
 function fetchLyrics() {
     if (!player || !player.getVideoData || !document.body.classList.contains('lyrics-mode')) return;
     var data = player.getVideoData();
+    var videoId = data.video_id;
     var contentEl = document.getElementById('lyrics-content');
     contentEl.innerText = "Searching...";
     stopLyricsScroll();
+    
     var songTitle = cleanTitle(data.title);
     var artist = cleanTitle(data.author);
     if (data.title.indexOf(' - ') !== -1) {
@@ -252,19 +254,73 @@ function fetchLyrics() {
         artist = cleanTitle(parts[0]);
         songTitle = cleanTitle(parts[1]);
     }
+
+    // Try primary source (Western database)
     var url = "https://api.lyrics.ovh/v1/" + encodeURIComponent(artist) + "/" + encodeURIComponent(songTitle);
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                try {
+                    var resp = JSON.parse(xhr.responseText);
+                    if (resp.lyrics) { 
+                        contentEl.innerText = resp.lyrics; 
+                        startLyricsScroll(); 
+                    } else { fetchFromYouTubeDescription(videoId); }
+                } catch(e) { fetchFromYouTubeDescription(videoId); }
+            } else { fetchFromYouTubeDescription(videoId); }
+        }
+    };
+    xhr.send();
+}
+
+function fetchFromYouTubeDescription(videoId) {
+    var contentEl = document.getElementById('lyrics-content');
+    var activeKey = localStorage.getItem('yt_api_key');
+    if (!activeKey) { contentEl.innerText = "Lyrics not found."; return; }
+
+    var url = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + videoId + "&key=" + activeKey;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4 && xhr.status === 200) {
             try {
-                var resp = JSON.parse(xhr.responseText);
-                if (resp.lyrics) { contentEl.innerText = resp.lyrics; startLyricsScroll(); }
-                else { contentEl.innerText = "Lyrics not found."; }
-            } catch(e) { contentEl.innerText = "Error."; }
-        } else if (xhr.readyState === 4) { contentEl.innerText = "Lyrics not found."; }
+                var data = JSON.parse(xhr.responseText);
+                if (data.items && data.items.length > 0) {
+                    var desc = data.items[0].snippet.description;
+                    // Attempt to find lyrics in description (common in Thai MVs)
+                    var lyricsText = extractLyricsFromDesc(desc);
+                    if (lyricsText) {
+                        contentEl.innerText = lyricsText;
+                        startLyricsScroll();
+                    } else {
+                        contentEl.innerText = "Lyrics not found in database or description.";
+                    }
+                }
+            } catch(e) { contentEl.innerText = "Lyrics not found."; }
+        }
     };
     xhr.send();
+}
+
+function extractLyricsFromDesc(desc) {
+    if (!desc) return null;
+    // Look for common Thai/English markers for lyrics
+    var markers = ["เนื้อเพลง", "Lyrics:", "Verse 1", "Chorus:", "LYRICS"];
+    for (var i = 0; i < markers.length; i++) {
+        var idx = desc.indexOf(markers[i]);
+        if (idx !== -1) {
+            var block = desc.substring(idx);
+            // Clean up URLs and social media links common in descriptions
+            block = block.replace(/https?:\/\/\S+/g, "");
+            block = block.replace(/Follow us.*/gi, "");
+            return block.trim();
+        }
+    }
+    // If no marker found, but description is long, it might just be the lyrics
+    if (desc.split('\n').length > 10) return desc.trim();
+    return null;
 }
 
 function cleanTitle(title) {
@@ -350,11 +406,8 @@ function updateQueueList() {
     var ids = idsInCurrentQueue();
     list.innerHTML = "";
     if (ids.length === 0) { list.innerText = "Queue empty."; return; }
-    
     var activeKey = localStorage.getItem('yt_api_key');
     if (!activeKey) { list.innerText = "Add API key to see titles."; return; }
-
-    // Fetch titles for the first 10 items in queue
     var nextIds = ids.slice(0, 10).join(',');
     var url = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + nextIds + "&key=" + activeKey;
     var xhr = new XMLHttpRequest();
@@ -381,25 +434,15 @@ function clearQueue() { localStorage.removeItem('kp_cached_queue'); updateQueueL
 
 function applySettings() {
     var savedKey = localStorage.getItem('yt_api_key');
-    if (savedKey) {
-        window.YT_API_KEY = savedKey;
-        var kInput = document.getElementById('settings-api-key');
-        if (kInput) kInput.value = savedKey;
-    }
+    if (savedKey) window.YT_API_KEY = savedKey;
     var orientation = localStorage.getItem('driverOrientation') || 'left';
     var uiLayer = document.getElementById('ui-layer');
     var btn = document.getElementById('btn-orientation');
-    if (orientation === 'right') {
-        uiLayer.classList.add('driver-right');
-        if (btn) btn.innerText = "RIGHT (RHD)";
-    }
-    if (!savedKey) document.getElementById('overlay-setup').style.display = 'flex';
+    if (orientation === 'right') { uiLayer.classList.add('driver-right'); if (btn) btn.innerText = "RIGHT (RHD)"; }
+    if (!savedKey) document.getElementById('setup-widget').style.display = 'block';
 }
 
-function openOverlay(id) { 
-    document.getElementById(id).classList.add('active'); 
-    if (id === 'overlay-media') updateQueueList();
-}
+function openOverlay(id) { document.getElementById(id).classList.add('active'); if (id === 'overlay-media') updateQueueList(); }
 function closeAllOverlays() { var o = document.querySelectorAll('.overlay'); for (var i=0; i<o.length; i++) o[i].classList.remove('active'); }
 
 function updateClock() {
