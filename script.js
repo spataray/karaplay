@@ -1,4 +1,4 @@
-// v3.0.6 (2026-03-28 22:30 HST): Integrated Manual Panel (No more blocking overlay).
+// v3.0.7 (2026-03-28 22:45 HST): Fixed API key loading into settings field.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -316,7 +316,11 @@ function idsInCurrentQueue() { try { var c = localStorage.getItem('kp_cached_que
 
 function applySettings() {
     var savedKey = localStorage.getItem('yt_api_key');
-    if (savedKey) window.YT_API_KEY = savedKey;
+    if (savedKey) {
+        window.YT_API_KEY = savedKey;
+        var keyInput = document.getElementById('settings-api-key');
+        if (keyInput) keyInput.value = savedKey;
+    }
     var orientation = localStorage.getItem('driverOrientation') || 'left';
     if (orientation === 'right') document.getElementById('ui-layer').classList.add('driver-right');
     if (!savedKey) document.getElementById('setup-widget').style.display = 'block';
