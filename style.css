@@ -38,7 +38,7 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
 
 #ui-layer.driver-right { flex-direction: row-reverse; }
 
-/* Sidebar - Highest Priority */
+/* Sidebar - Always Top Z-Index */
 #sidebar {
     width: 280px; height: 100%;
     background: linear-gradient(to right, rgba(0,0,0,0.9), transparent);
@@ -52,12 +52,11 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
 /* Integrated Lyrics Panel */
 #lyrics-panel {
     position: absolute;
-    left: 280px; /* Right of sidebar */
+    left: 280px;
     top: 50%;
     transform: translateY(-50%);
     width: 0;
-    height: 56.25vw; /* 16:9 aspect ratio relative to its future 30% width */
-    max-height: 60%;
+    height: 50%; /* Adjusted height to match video better */
     background: rgba(0,0,0,0.6);
     backdrop-filter: blur(10px);
     border-radius: 20px;
@@ -71,25 +70,23 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
 }
 
 .lyrics-mode #lyrics-panel {
-    width: 350px;
-    padding: 30px;
+    width: 350px; padding: 25px;
 }
 
 .driver-right #lyrics-panel {
-    left: auto;
-    right: 280px;
+    left: auto; right: 280px;
 }
 
 #lyrics-container { flex: 1; overflow: hidden; position: relative; }
 
 #lyrics-content {
-    font-size: 2rem; line-height: 1.6; color: white;
+    font-size: 1.8rem; line-height: 1.5; color: white;
     text-shadow: 0 0 10px black; font-weight: bold; text-align: left;
 }
 
 /* Speed Controls inside Panel */
 #lyrics-speed-controls {
-    margin-top: 30px; display: flex; align-items:center; gap:15px; pointer-events: auto;
+    margin-top: 20px; display: flex; align-items:center; gap:15px; pointer-events: auto;
 }
 
 .speed-btn {
@@ -98,7 +95,7 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
     border: 1px solid rgba(255,255,255,0.2); font-size: 1.5rem; cursor: pointer;
 }
 
-.speed-label { flex: 1; text-align: center; font-size: 0.9rem; font-weight: bold; color: var(--accent-color); }
+.speed-label { flex: 1; text-align: center; font-size: 0.8rem; font-weight: bold; color: var(--accent-color); }
 
 /* Sidebar Buttons */
 .side-btn {
@@ -108,16 +105,16 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
     cursor: pointer; touch-action: manipulation;
 }
 
-/* Overlays (Keep for Search/Settings) */
+/* Overlays (Media Manager / Settings) - MUST have background and high z-index */
 .overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9); z-index: 1000;
+    background: rgba(0,0,0,0.95); z-index: 1000;
     display: none; align-items: center; justify-content: center;
     padding: 100px; box-sizing: border-box; pointer-events: auto;
 }
 .overlay.active { display: flex; }
 
-/* Dashboard */
+/* Dashboard Info */
 #dashboard {
     position: absolute; top: var(--safe-padding); left: 300px;
     z-index: 90; pointer-events: none;
@@ -127,7 +124,6 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
 
 /* Mirroring */
 #ui-layer.driver-right #dashboard { left: auto; right: 300px; align-items: flex-end; }
-#ui-layer.driver-right #lyrics-panel { border-right: none; border-left: 1px solid rgba(255,255,255,0.1); }
 
 /* Media Bar */
 #media-bar {
@@ -145,3 +141,12 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
 }
 
 #search-input { width: 100%; max-width: 800px; background: #222; border: 2px solid #444; border-radius: 15px; padding: 20px; color: white; font-size: 2rem; }
+
+/* Up Next Items */
+.search-item {
+    display: flex; gap: 20px; padding: 15px; background: #1a1a1a;
+    border-radius: 15px; align-items: center; border: 2px solid transparent;
+}
+.search-item img { width: 120px; border-radius: 10px; }
+.search-item-info { flex: 1; }
+.search-item-title { font-size: 1.2rem; font-weight: bold; }
