@@ -61,7 +61,7 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
 }
 
 .lyrics-mode #lyrics-panel {
-    width: 400px; padding: 150px 30px 150px 30px;
+    width: 400px; padding: 220px 30px 150px 30px;
 }
 
 #lyrics-container { flex: 1; overflow: hidden; position: relative; }
