@@ -40,7 +40,7 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag">v2.9.3 (2026-03-28 19:00 HST)</div>
+        <div id="version-tag">v2.9.5 (2026-03-28 19:30 HST)</div>
         
         <!-- Sidebar (Fixed) -->
         <div id="sidebar">
@@ -98,12 +98,11 @@
         </div>
     </div>
 
-    <!-- Settings Overlay (Full Fix) -->
+    <!-- Settings Overlay -->
     <div id="overlay-settings" class="overlay">
         <div class="close-btn" onclick="closeAllOverlays()">&#x2715;</div>
         <h1 style="font-size:3rem; margin-bottom:20px; color:var(--accent-color);">Settings</h1>
         <div style="width:100%; max-width:600px; display:flex; flex-direction:column; gap:20px;">
-            
             <div style="display:flex; flex-direction:column; gap:10px;">
                 <label style="font-size:1.2rem; opacity:0.7;">YouTube API Key</label>
                 <div style="display:flex; gap:10px;">
@@ -116,9 +115,7 @@
                     <button onclick="saveApiKey()" style="flex:1; background:var(--accent-color); color:black; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem; cursor:pointer;">SAVE & RELOAD</button>
                 </div>
             </div>
-
             <hr style="width:100%; border:0; border-top:1px solid #333; margin:10px 0;">
-
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:1.5rem;">Driver Orientation</span>
                 <button id="btn-orientation" onclick="toggleOrientation()" style="background:#333; color:white; border:none; padding:15px 30px; border-radius:10px; font-size:1.2rem; width:220px; cursor:pointer;">LEFT (LHD)</button>
@@ -135,12 +132,13 @@
             <button onclick="saveSetupKey()" style="background:var(--accent-color); color:black; border:none; padding:20px 40px; border-radius:10px; font-size:1.5rem; font-weight:bold; cursor:pointer; width:100%;">SAVE & START</button>
         </div>
         <div style="width:300px; background:white; padding:20px; border-radius:20px; color:black; text-align:center;">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://console.cloud.google.com/flows/enableapi?apiid=youtube.googleapis.com" style="width:200px; margin-bottom:15px;">
-            <b style="font-size:1.2rem;">SCAN TO GET KEY</b>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://spataray.github.io/karaplay/setup.html" style="width:200px; margin-bottom:15px;">
+            <b style="font-size:1.2rem;">SCAN TO SETUP</b>
+            <p style="font-size:0.9rem; margin-top:10px;">Scan with your phone for easy instructions and to sync your key.</p>
         </div>
     </div>
 
-    <script src="script.js?v=2.9.3"></script>
+    <script src="script.js?v=2.9.5"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>

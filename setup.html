@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karaplay - API Key Setup</title>
+    <style>
+        body { font-family: sans-serif; padding: 30px; line-height: 1.6; background: #111; color: #eee; }
+        .card { background: #222; padding: 25px; border-radius: 20px; border: 1px solid #333; }
+        h1 { color: #ffcc00; margin-top: 0; }
+        .step { margin-bottom: 30px; }
+        .step-num { background: #ffcc00; color: #000; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; margin-right: 10px; }
+        button { background: #ffcc00; color: #000; border: none; padding: 15px 25px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem; width: 100%; }
+        input { width: 100%; padding: 15px; box-sizing: border-box; background: #333; border: 1px solid #444; color: #fff; border-radius: 10px; margin: 15px 0; font-size: 1rem; }
+        a { color: #ffcc00; text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Karaplay Setup</h1>
+        <p>Follow these steps on your phone to get Karaplay working in your car.</p>
+
+        <div class="step">
+            <span class="step-num">1</span> <b>Open Google Console</b>
+            <p>Click below to open the YouTube API page in a new tab. Log in with your Google account.</p>
+            <button onclick="window.open('https://console.cloud.google.com/flows/enableapi?apiid=youtube.googleapis.com', '_blank')">OPEN GOOGLE CONSOLE</button>
+        </div>
+
+        <div class="step">
+            <span class="step-num">2</span> <b>Create Your Key</b>
+            <p>Once the API is enabled, go to <b>Credentials</b>, click <b>+ Create Credentials</b>, and select <b>API Key</b>. Copy the long code (starts with AIza...).</p>
+        </div>
+
+        <div class="step">
+            <span class="step-num">3</span> <b>Send to Car</b>
+            <p>Paste your code below and press the button. This will add the setup link to your Chrome history.</p>
+            <input type="text" id="key-input" placeholder="Paste AIza... key here">
+            <button onclick="sendToCar()">SEND TO CAR</button>
+        </div>
+
+        <div class="step">
+            <span class="step-num">4</span> <b>Final Step (In Car)</b>
+            <p>Now, go to your <b>Car's Infotainment screen</b>. Open Chrome and check your <b>History</b>. Click the entry that looks like "Karaplay - API Key Setup...". The car will instantly save your key!</p>
+        </div>
+    </div>
+
+    <script>
+        function sendToCar() {
+            var key = document.getElementById('key-input').value.trim();
+            if (key.length < 20) {
+                alert("Please paste a valid key first.");
+                return;
+            }
+            // Redirect to the main app with the key attached.
+            // This puts the URL into the browser history.
+            window.location.href = "index.html?key=" + key;
+        }
+    </script>
+</body>
+</html>
