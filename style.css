@@ -79,10 +79,10 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
 
 /* Up Next - Sharp Gold Style */
 #up-next-toast {
-    position: absolute; top: 40px; right: 0; width: 380px;
+    position: absolute; top: 35%; right: 0; width: 380px;
     background: var(--accent-color); color: #000;
     padding: 20px 30px; z-index: 200;
-    clip-path: polygon(10% 0%, 100% 0%, 100% 100%, 0% 100%); /* Sharp angled cut on left */
+    clip-path: polygon(10% 0%, 100% 0%, 100% 100%, 0% 100%);
     transform: translateX(100%); transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     opacity: 0; box-shadow: -10px 10px 30px rgba(0,0,0,0.5);
 }
