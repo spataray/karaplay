@@ -51,17 +51,33 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
 
 /* Integrated Lyrics Panel */
 #lyrics-panel {
-    width: 0; height: 100%;
-    background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
-    border-right: 1px solid rgba(255,255,255,0.1);
-    display: flex; flex-direction: column;
-    padding: 0; overflow: hidden;
-    transition: width 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), padding 0.8s;
+    position: absolute;
+    left: 280px; /* Right of sidebar */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 56.25vw; /* 16:9 aspect ratio relative to its future 30% width */
+    max-height: 60%;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 50;
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
 .lyrics-mode #lyrics-panel {
-    width: 400px; padding: 220px 30px 150px 30px;
+    width: 350px;
+    padding: 30px;
+}
+
+.driver-right #lyrics-panel {
+    left: auto;
+    right: 280px;
 }
 
 #lyrics-container { flex: 1; overflow: hidden; position: relative; }
