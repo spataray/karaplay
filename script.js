@@ -1,4 +1,4 @@
-// v2.8.0 (2026-03-28 16:30 HST): Integrated Side-Panel (True Split-Screen), no clicking issues.
+// v2.9.0 (2026-03-28 18:00 HST): Triple-Split Layout (Entire UI slides to reveal lyrics).
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -21,70 +21,36 @@ function saveSetupKey() {
 // ── YouTube API Setup ──
 function onYouTubeIframeAPIReady() {
     console.log("YouTube API Loading...");
-    
-    // Main Player (High Priority)
     player = new YT.Player('player', {
-        height: '100%',
-        width: '100%',
-        playerVars: {
-            'autoplay': 1,
-            'controls': 0,
-            'modestbranding': 1,
-            'rel': 0,
-            'iv_load_policy': 3,
-            'disablekb': 1,
-            'enablejsapi': 1
-        },
-        events: {
-            'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange,
-            'onError': onPlayerError
-        }
+        height: '100%', width: '100%',
+        playerVars: { 'autoplay': 1, 'controls': 0, 'modestbranding': 1, 'rel': 0, 'iv_load_policy': 3, 'disablekb': 1, 'enablejsapi': 1 },
+        events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange, 'onError': onPlayerError }
     });
-
-    // Defer non-critical startup tasks by 3 seconds
-    setTimeout(function() {
-        initSecondaryTasks();
-    }, 3000);
+    setTimeout(function() { initSecondaryTasks(); }, 3000);
 }
 
 function initSecondaryTasks() {
-    console.log("Initializing deferred background tasks...");
     syncWeather();
     setInterval(syncWeather, 600000);
 }
 
-// Lazy-load Shadow Player only when Mixes/Queue resolution is needed
 function ensureShadowPlayer() {
     if (shadowPlayer) return;
-    console.log("Lazy-loading Shadow Player for background resolution...");
     shadowPlayer = new YT.Player('shadow-player', {
-        height: '1px',
-        width: '1px',
-        playerVars: {
-            'autoplay': 0,
-            'controls': 0,
-            'disablekb': 1,
-            'enablejsapi': 1
-        },
+        height: '1px', width: '1px',
+        playerVars: { 'autoplay': 0, 'controls': 0, 'disablekb': 1, 'enablejsapi': 1 },
         events: {
-            'onReady': function() { shadowPlayerReady = true; console.log("Shadow Player Ready."); },
-            'onError': function(e) { console.warn("Shadow Player Error:", e.data); }
+            'onReady': function() { shadowPlayerReady = true; },
+            'onError': function(e) { console.warn("Shadow Error:", e.data); }
         }
     });
 }
 
 function onPlayerReady(event) {
     playerReady = true;
-    console.log("Karaplay Ready - Player initialized.");
-
-    // Auto-resume from last session
     try {
         var lastVid = localStorage.getItem('kp_last_vid');
-        if (lastVid) {
-            console.log("Auto-resuming last session:", lastVid);
-            playRadio(lastVid, true);
-        }
+        if (lastVid) playRadio(lastVid, true);
     } catch(e) {}
 }
 
@@ -95,203 +61,53 @@ try {
 } catch(e) {}
 
 function onPlayerStateChange(event) {
-    console.log("Player State Change:", event.data);
-    
-    // 0 = YT.PlayerState.ENDED
-    if (event.data === 0) {
-        console.log("Song ended. Moving to next track...");
-        setTimeout(function() {
-            nextTrack();
-        }, 500); // Small buffer before kick
+    if (event.data === 0) { // ENDED
+        setTimeout(function() { nextTrack(); }, 500);
         return;
     }
-
-    if (event.data === 1) { // YT.PlayerState.PLAYING
+    if (event.data === 1) { // PLAYING
         var data = player.getVideoData();
         var videoId = data ? data.video_id : "";
-
-        // Save current session state (Track + Queue)
         if (videoId) {
-            try {
-                localStorage.setItem('kp_last_vid', videoId);
-                
-                // Save full queue only if it changed
-                var pl = idsInCurrentQueue(); 
-                if (pl && pl.length > 0) {
-                    var cached = localStorage.getItem('kp_cached_queue');
-                    if (JSON.stringify(pl) !== cached) {
-                        localStorage.setItem('kp_cached_queue', JSON.stringify(pl));
-                    }
-                }
-            } catch(e) {}
+            localStorage.setItem('kp_last_vid', videoId);
+            var pl = idsInCurrentQueue();
+            if (pl && pl.length > 0) localStorage.setItem('kp_cached_queue', JSON.stringify(pl));
         }
-
-        // Auto-skip if in skipList
-        if (videoId && skipList.indexOf(videoId) !== -1) {
-            console.log("Auto-skipping canceled track:", videoId);
-            nextTrack();
-            return;
-        }
-
         updateTrackInfo();
         showUpNextToast();
-        
-        // Refresh lyrics if panel is open
-        var lyricsPanel = document.getElementById('lyrics-panel');
-        if (lyricsPanel && lyricsPanel.classList.contains('active')) {
+        if (document.body.classList.contains('lyrics-mode')) {
             setTimeout(function() { fetchLyrics(); }, 2000);
         }
-
-        // Fun Fact Overlay
-        if (data && data.title) {
-            showFunFact(data.title, data.author);
-        }
-        
-        // Refresh queue if overlay is open
-        var mediaOverlay = document.getElementById('overlay-media');
-        if (mediaOverlay && mediaOverlay.classList.contains('active')) {
-            updateQueueList();
-        }
     }
-}
-
-function idsInCurrentQueue() {
-    try {
-        var cached = localStorage.getItem('kp_cached_queue');
-        if (cached) return JSON.parse(cached);
-    } catch(e) {}
-    return [];
-}
-
-var lastFactVideoId = "";
-
-function showFunFact(rawTitle, artist) {
-    if (!player || !player.getVideoData) return;
-    var videoId = player.getVideoData().video_id;
-    if (videoId === lastFactVideoId) return; // Don't show twice for same video
-    lastFactVideoId = videoId;
-
-    var clean = cleanTitle(rawTitle);
-    var query = clean + " " + artist + " song";
-    
-    // Wikipedia Search API
-    var url = "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=" + 
-              encodeURIComponent(query) + "&gsrlimit=1&prop=extracts&exintro&explaintext&exchars=300";
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            try {
-                var data = JSON.parse(xhr.responseText);
-                var pages = data.query.pages;
-                var pageId = Object.keys(pages)[0];
-                var extract = pages[pageId].extract;
-
-                if (extract && extract.length > 50) {
-                    displayFact(extract);
-                } else {
-                    // Fallback to Artist search
-                    fetchArtistFact(artist);
-                }
-            } catch(e) {
-                fetchArtistFact(artist);
-            }
-        }
-    };
-    xhr.send();
-}
-
-function fetchArtistFact(artist) {
-    var url = "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=" + 
-              encodeURIComponent(artist) + "&gsrlimit=1&prop=extracts&exintro&explaintext&exchars=300";
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            try {
-                var data = JSON.parse(xhr.responseText);
-                var pages = data.query.pages;
-                var pageId = Object.keys(pages)[0];
-                var extract = pages[pageId].extract;
-                if (extract) displayFact(extract);
-            } catch(e) {}
-        }
-    };
-    xhr.send();
-}
-
-function displayFact(text) {
-    var overlay = document.getElementById('fun-fact-overlay');
-    var textEl = document.getElementById('fact-text');
-    if (!overlay || !textEl) return;
-
-    textEl.innerText = text;
-    overlay.classList.add('active');
-
-    // Hide after 12 seconds
-    setTimeout(function() {
-        overlay.classList.remove('active');
-    }, 12000);
 }
 
 function cleanTitle(title) {
     if (!title) return "";
-    var junk = [
-        /\(Official.*?\)/gi,
-        /\[Official.*?\]/gi,
-        /\(Lyric.*?\)/gi,
-        /\[Lyric.*?\]/gi,
-        /\(Video.*?\)/gi,
-        /\[Video.*?\]/gi,
-        /\(Audio.*?\)/gi,
-        /\[Audio.*?\]/gi,
-        /- Topic$/gi,
-        /HQ$/g,
-        /HD$/g,
-        /4K$/g,
-        /|.*$/g, // Remove everything after a pipe
-        /feat\..*$/gi,
-        /ft\..*$/gi
-    ];
-    
+    var junk = [/\(Official.*?\)/gi, /\[Official.*?\]/gi, /\(Lyric.*?\)/gi, /\[Lyric.*?\]/gi, /\(Video.*?\)/gi, /\[Video.*?\]/gi, /\(Audio.*?\)/gi, /\[Audio.*?\]/gi, /- Topic$/gi, /HQ$/g, /HD$/g, /4K$/g, /feat\..*$/gi, /ft\..*$/gi];
     var clean = title;
-    for (var i = 0; i < junk.length; i++) {
-        clean = clean.replace(junk[i], "");
-    }
+    for (var i = 0; i < junk.length; i++) clean = clean.replace(junk[i], "");
     return clean.trim();
 }
 
 var lyricsScrollInterval = null;
-var scrollSpeed = 150; // ms per pixel
+var scrollSpeed = 150;
 
 function changeScrollSpeed(delta) {
     scrollSpeed += delta;
     if (scrollSpeed < 20) scrollSpeed = 20;
     if (scrollSpeed > 500) scrollSpeed = 500;
-    
     var indicator = document.getElementById('speed-indicator');
     if (indicator) indicator.innerText = scrollSpeed + "ms";
-
-    var panel = document.getElementById('lyrics-panel');
-    if (panel && panel.classList.contains('active')) {
-        startLyricsScroll(true);
-    }
+    if (document.body.classList.contains('lyrics-mode')) startLyricsScroll(true);
 }
 
 function toggleLyrics() {
-    var panel = document.getElementById('lyrics-panel');
     var btn = document.getElementById('btn-lyrics-toggle');
-    if (!panel) return;
-    
-    if (panel.classList.contains('active')) {
-        panel.classList.remove('active');
+    if (document.body.classList.contains('lyrics-mode')) {
         document.body.classList.remove('lyrics-mode');
         if (btn) btn.style.background = "var(--glass-bg)";
         stopLyricsScroll();
     } else {
-        panel.classList.add('active');
         document.body.classList.add('lyrics-mode');
         if (btn) btn.style.background = "var(--accent-color)";
         fetchLyrics();
@@ -299,63 +115,38 @@ function toggleLyrics() {
 }
 
 function stopLyricsScroll() {
-    if (lyricsScrollInterval) {
-        clearInterval(lyricsScrollInterval);
-        lyricsScrollInterval = null;
-    }
+    if (lyricsScrollInterval) { clearInterval(lyricsScrollInterval); lyricsScrollInterval = null; }
 }
 
 function startLyricsScroll(noDelay) {
     stopLyricsScroll();
     var container = document.getElementById('lyrics-container');
     if (!container) return;
-    
     if (!noDelay) container.scrollTop = 0;
-    
     var delay = noDelay ? 0 : 5000;
-    
     setTimeout(function() {
-        var panel = document.getElementById('lyrics-panel');
-        if (!panel || !panel.classList.contains('active')) return;
-        
+        if (!document.body.classList.contains('lyrics-mode')) return;
         lyricsScrollInterval = setInterval(function() {
             container.scrollTop += 1;
-            if (container.scrollTop + container.clientHeight >= container.scrollHeight) {
-                stopLyricsScroll();
-            }
+            if (container.scrollTop + container.clientHeight >= container.scrollHeight) stopLyricsScroll();
         }, scrollSpeed);
     }, delay);
 }
 
 function fetchLyrics() {
-    if (!player || !player.getVideoData) return;
-    
-    var panel = document.getElementById('lyrics-panel');
-    if (!panel || !panel.classList.contains('active')) return;
-
+    if (!player || !player.getVideoData || !document.body.classList.contains('lyrics-mode')) return;
     var data = player.getVideoData();
-    var rawTitle = data.title;
-    var artist = data.author;
-    
     var contentEl = document.getElementById('lyrics-content');
-    contentEl.innerText = "Searching for lyrics...";
+    contentEl.innerText = "Searching...";
     stopLyricsScroll();
-    
-    // Clean strings
-    var songTitle = cleanTitle(rawTitle);
-    var cleanArtist = cleanTitle(artist);
-
-    // If title contains artist, try to split
-    if (rawTitle.indexOf(' - ') !== -1) {
-        var parts = rawTitle.split(' - ');
-        cleanArtist = cleanTitle(parts[0]);
+    var songTitle = cleanTitle(data.title);
+    var artist = cleanTitle(data.author);
+    if (data.title.indexOf(' - ') !== -1) {
+        var parts = data.title.split(' - ');
+        artist = cleanTitle(parts[0]);
         songTitle = cleanTitle(parts[1]);
     }
-
-    console.log("Fetching lyrics for:", cleanArtist, "-", songTitle);
-
-    var url = "https://api.lyrics.ovh/v1/" + encodeURIComponent(cleanArtist) + "/" + encodeURIComponent(songTitle);
-    
+    var url = "https://api.lyrics.ovh/v1/" + encodeURIComponent(artist) + "/" + encodeURIComponent(songTitle);
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.onreadystatechange = function() {
@@ -363,34 +154,13 @@ function fetchLyrics() {
             if (xhr.status === 200) {
                 try {
                     var resp = JSON.parse(xhr.responseText);
-                    if (resp.lyrics) {
-                        contentEl.innerText = resp.lyrics;
-                        startLyricsScroll();
-                    } else {
-                        // Fallback retry with just title if artist failed
-                        contentEl.innerText = "Lyrics not found. Retrying simple search...";
-                        setTimeout(function() { fetchLyricsSimple(songTitle); }, 1000);
-                    }
-                } catch(e) {
-                    contentEl.innerText = "Error parsing lyrics.";
-                }
-            } else {
-                contentEl.innerText = "Lyrics not found. Retrying simple search...";
-                setTimeout(function() { fetchLyricsSimple(songTitle); }, 1000);
-            }
+                    if (resp.lyrics) { contentEl.innerText = resp.lyrics; startLyricsScroll(); }
+                    else { contentEl.innerText = "Lyrics not found."; }
+                } catch(e) { contentEl.innerText = "Error."; }
+            } else { contentEl.innerText = "Lyrics not found."; }
         }
     };
     xhr.send();
-}
-
-function fetchLyricsSimple(query) {
-    var contentEl = document.getElementById('lyrics-content');
-    // Simple search often works better for YT titles
-    var url = "https://api.lyrics.ovh/v1/search?q=" + encodeURIComponent(query);
-    // Note: lyrics.ovh /v1/ artist/title is more reliable than search if formatted correctly.
-    // Since search API is different, we just try one more artist/title guess.
-    var clean = query.replace(/lyrics/gi, "").trim();
-    contentEl.innerText = "No exact match for " + clean;
 }
 
 function showUpNextToast() {
@@ -398,34 +168,24 @@ function showUpNextToast() {
     var data = player.getVideoData();
     var currentId = data ? data.video_id : "";
     var idx = ids.indexOf(currentId);
-    
     if (ids.length === 0 || idx === -1 || idx >= ids.length - 1) return;
-    
     var nextVideoId = ids[idx + 1];
     var activeKey = (typeof YT_API_KEY !== 'undefined') ? YT_API_KEY : window.YT_API_KEY;
-    
     if (!activeKey) return;
-
     var url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet&id=' + nextVideoId + '&key=' + activeKey;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4 && xhr.status === 200) {
             try {
-                var data = JSON.parse(xhr.responseText);
-                if (data.items && data.items.length > 0) {
-                    var title = data.items[0].snippet.title;
+                var d = JSON.parse(xhr.responseText);
+                if (d.items && d.items.length > 0) {
+                    var t = d.items[0].snippet.title;
                     var toast = document.getElementById('up-next-toast');
-                    var toastTitle = document.getElementById('toast-title');
-                    var toastHistory = document.getElementById('toast-history');
-                    
-                    if (toast && toastTitle) {
-                        toastTitle.innerText = title;
-                        if (toastHistory) toastHistory.innerText = "Coming up next...";
+                    if (toast) {
+                        document.getElementById('toast-title').innerText = t;
                         toast.classList.add('active');
-                        setTimeout(function() {
-                            toast.classList.remove('active');
-                        }, 5000);
+                        setTimeout(function() { toast.classList.remove('active'); }, 8000);
                     }
                 }
             } catch(e) {}
@@ -434,149 +194,21 @@ function showUpNextToast() {
     xhr.send();
 }
 
-function onPlayerError(event) {
-    console.warn("Player Error:", event.data);
-    nextTrack(); // Auto-skip if video is unplayable
-}
-
-function resolveAlgorithmicMix(videoId) {
-    if (!shadowPlayer || !shadowPlayerReady) {
-        console.warn("Shadow Player not ready yet.");
-        // Try again in 2 seconds if not ready
-        setTimeout(function() { resolveAlgorithmicMix(videoId); }, 2000);
-        return;
-    }
-
-    console.log("Shadow Player resolving Mix for:", videoId);
-    shadowPlayer.cuePlaylist({
-        'list': 'RD' + videoId,
-        'listType': 'playlist',
-        'index': 0,
-        'startSeconds': 0,
-        'suggestedQuality': 'default'
-    });
-
-    // Poll shadow player for resolved IDs
-    var pollCount = 0;
-    var pollInterval = setInterval(function() {
-        pollCount++;
-        if (shadowPlayer.getPlaylist) {
-            var pl = shadowPlayer.getPlaylist();
-            if (pl && pl.length > 1) {
-                console.log("Algorithmic IDs captured via Shadow Player:", pl.length);
-                try {
-                    localStorage.setItem('kp_cached_queue', JSON.stringify(pl));
-                } catch(e) {}
-                
-                // Force UI Refresh if open
-                var mediaOverlay = document.getElementById('overlay-media');
-                if (mediaOverlay && mediaOverlay.classList.contains('active')) {
-                    updateQueueList();
-                }
-                clearInterval(pollInterval);
-            }
-        }
-        if (pollCount > 30) clearInterval(pollInterval); // Stop after 15s
-    }, 500);
-}
-
-// ── Radio Mode Logic ──
-function playRadio(videoId, isResume) {
-    console.log("playRadio triggered for:", videoId, "isResume:", !!isResume);
-    
-    // FORCE READY CHECK
-    if (!playerReady && player && player.loadVideoById) playerReady = true;
-
-    if (!playerReady) {
-        console.warn("ABORT: Player not ready.");
-        return;
-    }
-    
-    if (!videoId) return;
-    videoId = String(videoId).trim();
-    currentVideoId = videoId;
-
-    // RESUME LOGIC
-    if (isResume) {
-        try {
-            var cachedQueue = localStorage.getItem('kp_cached_queue');
-            if (cachedQueue) {
-                var ids = JSON.parse(cachedQueue);
-                if (ids && ids.length > 0) {
-                    var lastVid = localStorage.getItem('kp_last_vid') || videoId;
-                    var startIndex = ids.indexOf(lastVid);
-                    if (startIndex === -1) startIndex = 0;
-                    console.log("Resuming cached queue at index:", startIndex);
-                    player.loadVideoById(lastVid);
-                    return;
-                }
-            }
-        } catch(e) {}
-    }
-
-    // ALGORITHMIC START (v2.2.0)
-    // 1. Play chosen song immediately
-    player.loadVideoById(videoId);
-
-    // 2. Resolve true YouTube Mix IDs in the background via Shadow Player
-    if (!isResume) {
-        ensureShadowPlayer();
-        resolveAlgorithmicMix(videoId);
-    }
-    
-    if (!isResume) closeAllOverlays();
-}
-
-// ── Track Info ──
-function updateTrackInfo() {
-    if (!player || !player.getVideoData) return;
-    var data = player.getVideoData();
-    var titleEl = document.getElementById('track-title');
-    var authorEl = document.getElementById('track-author');
-    if (titleEl) titleEl.innerText = data.title || "Unknown Title";
-    if (authorEl) authorEl.innerText = data.author || "Unknown Artist";
-}
-
-// ── Media Controls ──
-function togglePlay() {
-    if (!player || !player.getPlayerState) return;
-    var state = player.getPlayerState();
-    var playBtn = document.getElementById('sidebar-btn-play');
-    if (state === 1) { // Playing
-        player.pauseVideo();
-        if (playBtn) playBtn.innerHTML = "&#9654;";
-    } else {
-        player.playVideo();
-        if (playBtn) playBtn.innerHTML = "&#9208;";
-    }
-}
-
 function nextTrack() {
-    console.log("Kicking next track...");
     try {
         var ids = idsInCurrentQueue();
         if (ids && ids.length > 0) {
             var data = player.getVideoData();
             var currentId = data ? data.video_id : "";
             var idx = ids.indexOf(currentId);
-            
             var nextIdx = idx + 1;
             if (nextIdx < ids.length) {
-                var nextId = ids[nextIdx];
-                console.log("Auto-Play: Loading", nextId);
-                player.loadVideoById(nextId);
+                player.loadVideoById(ids[nextIdx]);
                 return;
             }
         }
-    } catch(e) {
-        console.error("NextTrack Error:", e);
-    }
-    
-    // Fallback if queue logic fails
-    if (player && player.nextVideo) {
-        console.log("Using YouTube Native Next");
-        player.nextVideo();
-    }
+    } catch(e) {}
+    if (player && player.nextVideo) player.nextVideo();
 }
 
 function prevTrack() {
@@ -586,375 +218,68 @@ function prevTrack() {
             var data = player.getVideoData();
             var currentId = data ? data.video_id : "";
             var idx = ids.indexOf(currentId);
-            if (idx > 0) {
-                var prevId = ids[idx - 1];
-                console.log("Manual Prev: Playing", prevId);
-                player.loadVideoById(prevId);
-                return;
-            }
+            if (idx > 0) { player.loadVideoById(ids[idx - 1]); return; }
         }
     } catch(e) {}
     if (player && player.previousVideo) player.previousVideo();
 }
 
-// ── Settings & Orientation ──
-function toggleOrientation() {
-    var uiLayer = document.getElementById('ui-layer');
-    var btn = document.getElementById('btn-orientation');
-    if (!uiLayer || !btn) return;
-    var isRight = uiLayer.classList.toggle('driver-right');
-    var val = isRight ? 'right' : 'left';
-    btn.innerText = isRight ? "RIGHT (RHD)" : "LEFT (LHD)";
-    try { localStorage.setItem('driverOrientation', val); } catch(e) {}
+function togglePlay() {
+    var s = player.getPlayerState();
+    if (s === 1) player.pauseVideo(); else player.playVideo();
 }
 
-function toggleApiKeyVisibility() {
-    var input = document.getElementById('settings-api-key');
-    if (!input) return;
-    input.type = (input.type === 'password') ? 'text' : 'password';
+function updateTrackInfo() {
+    if (!player || !player.getVideoData) return;
+    var d = player.getVideoData();
+    document.getElementById('track-title').innerText = cleanTitle(d.title);
+    document.getElementById('track-author').innerText = d.author;
+    var btn = document.getElementById('sidebar-btn-play');
+    if (btn) btn.innerHTML = "&#9208;";
 }
 
-function updateKeyLength() {
-    var input = document.getElementById('settings-api-key');
-    var indicator = document.getElementById('key-length-indicator');
-    if (input && indicator) indicator.innerText = "Length: " + input.value.trim().length;
-}
-
-function testApiKey() {
-    var key = document.getElementById('settings-api-key').value.trim();
-    var resultEl = document.getElementById('test-result');
-    if (!key) { alert("Enter a key to test."); return; }
-    if (resultEl) resultEl.innerHTML = '<span style="color:yellow;">Testing...</span>';
-    var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=test&maxResults=1&key=' + key;
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                if (resultEl) resultEl.innerHTML = '<span style="color:lime;">✅ Key is working!</span>';
-            } else {
-                var msg = "❌ Failed";
-                try {
-                    var data = JSON.parse(xhr.responseText);
-                    if (data.error && data.error.message) msg = "❌ " + data.error.message;
-                } catch(e) {}
-                if (resultEl) resultEl.innerHTML = '<span style="color:red; font-size:0.9rem;">' + msg + '</span>';
-            }
-        }
-    };
-    xhr.send();
-}
-
-function saveApiKey() {
-    var key = document.getElementById('settings-api-key').value.trim();
-    if (!key) { alert("Please enter a valid API Key."); return; }
-    try {
-        localStorage.setItem('yt_api_key', key);
-        alert("API Key saved! Karaplay will now reload.");
-        location.reload();
-    } catch(e) { alert("Error saving: " + e.message); }
+function idsInCurrentQueue() {
+    try { var c = localStorage.getItem('kp_cached_queue'); if (c) return JSON.parse(c); } catch(e) {}
+    return [];
 }
 
 function applySettings() {
-    var urlKey = getQueryParam('key');
-    if (urlKey && urlKey.length > 10) {
-        try {
-            localStorage.setItem('yt_api_key', urlKey);
-            alert("API Key received! Saving and reloading...");
-            var cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-            window.location.href = cleanUrl;
-            return;
-        } catch(e) {}
-    }
-    
-    var savedKey = null;
-    try {
-        savedKey = localStorage.getItem('yt_api_key');
-        if (savedKey) {
-            window.YT_API_KEY = savedKey;
-            var keyInput = document.getElementById('settings-api-key');
-            if (keyInput) keyInput.value = savedKey;
-            
-            // Hide setup overlay if it exists
-            var setupOverlay = document.getElementById('overlay-setup');
-            if (setupOverlay) setupOverlay.style.display = 'none';
-        } else {
-            // Show setup overlay if no key
-            var setupOverlay = document.getElementById('overlay-setup');
-            if (setupOverlay) {
-                setupOverlay.style.display = 'flex';
-                setupOverlay.classList.add('active');
-            }
-        }
-    } catch(e) {}
-
-    var orientation = 'left';
-    try { orientation = localStorage.getItem('driverOrientation') || 'left'; } catch(e) {}
-    if (orientation === 'right') {
-        var uiLayer = document.getElementById('ui-layer');
-        var btn = document.getElementById('btn-orientation');
-        if (uiLayer) uiLayer.classList.add('driver-right');
-        if (btn) btn.innerText = "RIGHT (RHD)";
-    }
+    var savedKey = localStorage.getItem('yt_api_key');
+    if (savedKey) window.YT_API_KEY = savedKey;
+    var orientation = localStorage.getItem('driverOrientation') || 'left';
+    if (orientation === 'right') document.getElementById('ui-layer').classList.add('driver-right');
+    if (!savedKey) document.getElementById('overlay-setup').style.display = 'flex';
 }
 
-function getQueryParam(name) {
-    var query = window.location.search.substring(1);
-    var vars = query.split("&");
-    for (var i = 0; i < vars.length; i++) {
-        var pair = vars[i].split("=");
-        if (pair[0] === name) return pair[1] !== undefined ? decodeURIComponent(pair[1]) : "";
-    }
-    return null;
-}
-
-// ── Search History Management ──
-var searchHistory = [];
-try {
-    var savedHistory = localStorage.getItem('kp_search_history');
-    if (savedHistory) searchHistory = JSON.parse(savedHistory);
-} catch(e) {}
-
-function saveToHistory(videoId, title, author, thumb) {
-    for (var i = 0; i < searchHistory.length; i++) {
-        if (searchHistory[i].id === videoId) {
-            searchHistory.splice(i, 1);
-            break;
-        }
-    }
-    searchHistory.unshift({ id: videoId, title: title, author: author, thumb: thumb });
-    if (searchHistory.length > 10) searchHistory.pop();
-    try { localStorage.setItem('kp_search_history', JSON.stringify(searchHistory)); } catch(e) {}
-}
-
-function loadSearchHistory() {
-    var resultsEl = document.getElementById('search-results');
-    var input = document.getElementById('search-input');
-    if (input && input.value.trim().length > 0) return;
-    if (!resultsEl) return;
-    if (searchHistory.length === 0) {
-        resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.3; font-size:1.5rem;">Results will appear here</div>';
-        return;
-    }
-    resultsEl.innerHTML = '<div style="font-size:1.2rem; opacity:0.5; margin-bottom:10px; padding-left:10px; border-left:4px solid var(--accent-color);">Recently Found</div>';
-    for (var i = 0; i < searchHistory.length; i++) {
-        (function(item) {
-            var div = document.createElement('div');
-            div.className = 'search-item';
-            div.onclick = function() { 
-                saveToHistory(item.id, item.title, item.author, item.thumb);
-                playRadio(item.id); 
-            };
-            div.innerHTML = '<img src="' + item.thumb + '"><div class="search-item-info"><div class="search-item-title">' + escHtml(item.title) + '</div><div class="search-item-author">' + escHtml(item.author) + '</div></div>';
-            resultsEl.appendChild(div);
-        })(searchHistory[i]);
-    }
-}
-
-// ── Search Logic ──
-function doSearch() {
-    var input = document.getElementById('search-input');
-    if (!input || !input.value.trim()) return;
-    var query = input.value.trim();
-    input.blur();
-    var resultsEl = document.getElementById('search-results');
-    if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:2rem;">Searching...</div>';
-    var activeKey = (typeof YT_API_KEY !== 'undefined') ? YT_API_KEY : window.YT_API_KEY;
-    if (!activeKey) {
-        alert("API Key is missing.");
-        return;
-    }
-    var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=' + encodeURIComponent(query) + '&type=video&videoEmbeddable=true&maxResults=10&key=' + activeKey;
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            try {
-                var data = JSON.parse(xhr.responseText);
-                resultsEl.innerHTML = '';
-                if (!data.items || data.items.length === 0) {
-                    resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:1.5rem;">No results found</div>';
-                    return;
-                }
-                for (var i = 0; i < data.items.length; i++) {
-                    (function(item) {
-                        var id = item.id.videoId;
-                        if (!id) return;
-                        var div = document.createElement('div');
-                        div.className = 'search-item';
-                        div.onclick = function() { 
-                            console.log("SEARCH CLICK: Selecting ID", id);
-                            saveToHistory(id, item.snippet.title, item.snippet.channelTitle, item.snippet.thumbnails.medium.url);
-                            playRadio(id); 
-                        };
-                        div.innerHTML = '<img src="' + item.snippet.thumbnails.medium.url + '"><div class="search-item-info"><div class="search-item-title">' + escHtml(item.snippet.title) + '</div><div class="search-item-author">' + escHtml(item.snippet.channelTitle) + '</div></div>';
-                        resultsEl.appendChild(div);
-                    })(data.items[i]);
-                }
-            } catch(e) {}
-        }
-    };
-    xhr.send();
-}
-
-// ── UI Helpers ──
-function openOverlay(id) {
-    var el = document.getElementById(id);
-    if (el) el.classList.add('active');
-    if (id === 'overlay-media') {
-        var si = document.getElementById('search-input');
-        if (si) {
-            si.oninput = function() { if (si.value.trim().length === 0) loadSearchHistory(); };
-            setTimeout(function() { si.focus(); }, 200);
-        }
-        loadSearchHistory();
-        updateQueueList();
-    }
-    if (id === 'overlay-sync') {
-        var baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-        var displayEl = document.getElementById('sync-example-url');
-        if (displayEl) displayEl.innerText = baseUrl + "?key=YOUR_KEY";
-    }
-}
-
-// ── Queue Management ──
-function updateQueueList() {
-    var idsToFetch = idsInCurrentQueue();
-    var resultsEl = document.getElementById('queue-list');
-    if (!idsToFetch || idsToFetch.length === 0) {
-        if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.3; font-size:1.5rem;">Queue is empty.</div>';
-        return;
-    }
-    if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:2rem;">Loading Queue...</div>';
-    var data = player.getVideoData();
-    var currentId = data ? data.video_id : "";
-    var activeKey = (typeof YT_API_KEY !== 'undefined') ? YT_API_KEY : window.YT_API_KEY;
-    if (!activeKey) return;
-    var url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet&id=' + idsToFetch.join(',') + '&key=' + activeKey;
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            try {
-                var data = JSON.parse(xhr.responseText);
-                var videoDetails = {};
-                for (var i = 0; i < data.items.length; i++) videoDetails[data.items[i].id] = data.items[i].snippet;
-                if (resultsEl) {
-                    resultsEl.innerHTML = '';
-                    for (var j = 0; j < idsToFetch.length; j++) {
-                        (function(vid) {
-                            var snippet = videoDetails[vid];
-                            if (!snippet) return;
-                            var isCurrent = vid === currentId;
-                            var isCanceled = skipList.indexOf(vid) !== -1;
-                            var div = document.createElement('div');
-                            div.className = 'search-item' + (isCurrent ? ' playing' : '') + (isCanceled ? ' canceled' : '');
-                            div.onclick = function() { playRadio(vid); };
-                            var thumb = snippet.thumbnails.default ? snippet.thumbnails.default.url : '';
-                            var html = '<img src="' + thumb + '"><div class="search-item-info"><div class="search-item-title">' + (isCurrent ? '▶ ' : '') + escHtml(snippet.title) + '</div><div class="search-item-author">' + escHtml(snippet.channelTitle) + '</div></div>';
-                            if (isCurrent) html += '<div style="color:var(--accent-color); font-weight:bold; margin-left: 20px;">NOW PLAYING</div>';
-                            else if (!isCanceled) html += '<div class="cancel-btn">✕</div>';
-                            else html += '<div style="color:red; font-weight:bold; margin-left: 20px;">CANCELED</div>';
-                            div.innerHTML = html;
-                            var cb = div.querySelector('.cancel-btn');
-                            if (cb) { cb.onclick = function(e) { e.stopPropagation(); cancelTrack(vid); }; }
-                            resultsEl.appendChild(div);
-                        })(idsToFetch[j]);
-                    }
-                }
-            } catch(e) {}
-        }
-    };
-    xhr.send();
-}
-
-function clearQueue() {
-    if (confirm("Clear your current radio session and queue?")) {
-        skipList = [];
-        try {
-            localStorage.removeItem('kp_last_vid');
-            localStorage.removeItem('kp_skip_list');
-            localStorage.removeItem('kp_cached_queue');
-        } catch(e) {}
-        if (player && player.stopVideo) player.stopVideo();
-        var titleEl = document.getElementById('track-title');
-        var authorEl = document.getElementById('track-author');
-        if (titleEl) titleEl.innerText = "Ready to Play";
-        if (authorEl) authorEl.innerText = "Search for a song to start radio";
-        updateQueueList();
-        closeAllOverlays();
-    }
-}
-
-function saveSkipList() { try { localStorage.setItem('kp_skip_list', JSON.stringify(skipList)); } catch(e) {} }
-
-function cancelTrack(videoId) {
-    if (videoId && skipList.indexOf(videoId) === -1) {
-        skipList.push(videoId);
-        saveSkipList();
-        var data = player.getVideoData();
-        if (videoId === (data ? data.video_id : "")) nextTrack();
-        updateQueueList();
-    }
-}
-
-function closeAllOverlays() {
-    var overlays = document.querySelectorAll('.overlay');
-    for (var i = 0; i < overlays.length; i++) overlays[i].classList.remove('active');
-}
-
-function escHtml(str) {
-    var div = document.createElement('div');
-    div.textContent = str || '';
-    return div.innerHTML;
-}
-
-// ── Dashboard Updates ──
+function openOverlay(id) { document.getElementById(id).classList.add('active'); }
+function closeAllOverlays() { var o = document.querySelectorAll('.overlay'); for (var i=0; i<o.length; i++) o[i].classList.remove('active'); }
 function updateClock() {
-    var clockEl = document.getElementById('clock');
-    if (!clockEl) return;
     var now = new Date();
-    var h = now.getHours();
-    var m = now.getMinutes();
-    var ampm = h >= 12 ? 'PM' : 'AM';
-    h = h % 12 || 12;
-    m = m < 10 ? '0' + m : m;
-    clockEl.innerText = h + ":" + m + " " + ampm;
+    var h = now.getHours(); var m = now.getMinutes();
+    var ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; m = m < 10 ? '0' + m : m;
+    document.getElementById('clock').innerText = h + ":" + m + " " + ampm;
 }
 
 function syncWeather() {
-    var weatherEl = document.getElementById('weather');
-    if (!weatherEl) return;
     var url = 'https://api.open-meteo.com/v1/forecast?latitude=21.3069&longitude=-157.8583&current_weather=true&temperature_unit=fahrenheit';
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4 && xhr.status === 200) {
             try {
-                var data = JSON.parse(xhr.responseText);
-                var w = data.current_weather;
-                if (w) weatherEl.innerText = Math.round(w.temperature) + "°F " + getWeatherEmoji(w.weathercode);
+                var d = JSON.parse(xhr.responseText);
+                var w = d.current_weather;
+                if (w) document.getElementById('weather').innerText = Math.round(w.temperature) + "°F " + (w.weathercode === 0 ? '☀️' : '🌤️');
             } catch(e) {}
         }
     };
     xhr.send();
 }
 
-function getWeatherEmoji(code) {
-    if (code === 0) return '☀️';
-    if (code <= 2) return '🌤️';
-    if (code === 3) return '☁️';
-    return '🌦️';
-}
-
 // ── Init ──
 applySettings();
 updateClock();
-setInterval(updateClock, 5000); 
-
+setInterval(updateClock, 5000);
 var searchInput = document.getElementById('search-input');
-if (searchInput) {
-    searchInput.onkeydown = function(e) { if ((e.keyCode || e.which) === 13) doSearch(); };
-}
-
+if (searchInput) searchInput.onkeydown = function(e) { if ((e.keyCode || e.which) === 13) doSearch(); };
 if (window.YT && window.YT.Player && !player) onYouTubeIframeAPIReady();
