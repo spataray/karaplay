@@ -10,28 +10,69 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
-<body>
+<body class="dash-mode">
 
-    <!-- [LAYER 1] Lyrics Background -->
-    <div id="lyrics-bg-layer">
-        <div id="lyrics-container">
-            <div id="lyrics-content">Loading lyrics...</div>
-        </div>
-        <div id="lyrics-speed-controls">
-            <button onclick="changeScrollSpeed(-25)" class="speed-btn">+</button>
-            <div class="speed-label">
-                <span id="speed-indicator">150ms</span>
+    <!-- [LAYER 1] TOOLS BACKGROUND (Revealed by push) -->
+    <div id="tools-layer">
+        
+        <!-- Lyrics Panel -->
+        <div id="panel-lyrics" class="tool-panel">
+            <div id="lyrics-container">
+                <div id="lyrics-content">Loading lyrics...</div>
             </div>
-            <button onclick="changeScrollSpeed(25)" class="speed-btn">-</button>
+            <div class="tool-controls">
+                <button onclick="changeScrollSpeed(-25)" class="speed-btn">+</button>
+                <div class="speed-label"><span id="speed-indicator">150ms</span></div>
+                <button onclick="changeScrollSpeed(25)" class="speed-btn">-</button>
+            </div>
         </div>
+
+        <!-- Search / Media Manager Panel -->
+        <div id="panel-media" class="tool-panel">
+            <h2 class="panel-title">Media Manager</h2>
+            <input type="search" id="search-input" placeholder="Search song or artist..." autocomplete="off">
+            <div class="panel-split">
+                <div id="search-results"></div>
+                <div id="queue-side">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <span style="font-weight:bold; color:var(--accent-color);">UP NEXT</span>
+                        <button onclick="clearQueue()" class="mini-btn">CLEAR</button>
+                    </div>
+                    <div id="queue-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div id="panel-settings" class="tool-panel">
+            <h2 class="panel-title">Settings</h2>
+            <div class="setting-group">
+                <label>YouTube API Key</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="password" id="settings-api-key" placeholder="Paste key here..." style="flex:1;">
+                    <button onclick="toggleApiKeyVisibility()" class="mini-btn">👁️</button>
+                </div>
+                <div id="test-result"></div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button onclick="testApiKey()" style="flex:1;" class="mini-btn">TEST</button>
+                    <button onclick="saveApiKey()" style="flex:1;" class="gold-btn">SAVE & RELOAD</button>
+                </div>
+            </div>
+            <hr>
+            <div class="setting-row">
+                <span>Driver Side</span>
+                <button id="btn-orientation" onclick="toggleOrientation()" class="gold-btn">LEFT (LHD)</button>
+            </div>
+        </div>
+
     </div>
 
-    <!-- [LAYER 2] Video Player -->
+    <!-- [LAYER 2] Background Video Player (Slides) -->
     <div id="player-container">
         <div id="player"></div>
     </div>
 
-    <!-- Shadow Player -->
+    <!-- Shadow Player (Hidden) -->
     <div id="shadow-player-container" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;">
         <div id="shadow-player"></div>
     </div>
@@ -40,16 +81,16 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag">v2.9.9 (2026-03-28 20:30 HST)</div>
+        <div id="version-tag">v3.0.0 (2026-03-28 21:00 HST)</div>
         
         <!-- Sidebar (Fixed) -->
         <div id="sidebar">
             <div id="sidebar-top">
-                <div class="side-btn" onclick="openOverlay('overlay-media')" title="Media Manager">&#127911;</div>
-                <div class="side-btn" id="btn-lyrics-toggle" onclick="toggleLyrics()" title="Lyrics" style="margin-top:20px;">🎤</div>
+                <div class="side-btn" id="btn-media-toggle" onclick="togglePanel('media')" title="Search">&#127911;</div>
+                <div class="side-btn" id="btn-lyrics-toggle" onclick="togglePanel('lyrics')" title="Lyrics" style="margin-top:20px;">🎤</div>
             </div>
             <div id="sidebar-bottom">
-                <div class="side-btn" onclick="openOverlay('overlay-settings')" title="Settings">&#9881;</div>
+                <div class="side-btn" id="btn-settings-toggle" onclick="togglePanel('settings')" title="Settings">&#9881;</div>
                 <div id="playback-cluster">
                     <div class="side-btn" onclick="prevTrack()">&#9198;</div>
                     <div class="side-btn" id="sidebar-btn-play" onclick="togglePlay()">&#9654;</div>
@@ -58,7 +99,7 @@
             </div>
         </div>
 
-        <!-- Sliding Wrapper -->
+        <!-- Sliding Content Wrapper -->
         <div id="content-wrapper">
             <div id="dashboard">
                 <div id="clock">00:00 AM</div>
@@ -70,9 +111,8 @@
                 <div class="setup-card">
                     <div class="setup-info">
                         <h2>API Key Required</h2>
-                        <p>Scan the code or paste your key to start.</p>
                         <input type="password" id="setup-key-input" placeholder="Paste AIza... key">
-                        <button onclick="saveSetupKey()">SAVE & START</button>
+                        <button onclick="saveSetupKey()" class="gold-btn">SAVE & START</button>
                     </div>
                     <div class="setup-qr">
                         <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://spataray.github.io/karaplay/setup.html">
@@ -89,57 +129,14 @@
             <div id="media-bar">
                 <div id="track-info">
                     <div id="track-title">Ready to Play</div>
-                    <div id="track-author">Search for a song to start radio</div>
+                    <div id="track-author">Select a song to start</div>
                 </div>
             </div>
         </div>
 
     </div>
 
-    <!-- Media Manager Overlay -->
-    <div id="overlay-media" class="overlay">
-        <div class="close-btn" onclick="closeAllOverlays()">&#x2715;</div>
-        <div style="width:100%; max-width:1200px; display:flex; flex-direction:column; height:100%;">
-            <input type="search" id="search-input" placeholder="Search song or artist..." autocomplete="off">
-            <div style="display:flex; gap:30px; flex:1; overflow:hidden;">
-                <div id="search-results" style="flex:1; overflow-y:auto;"></div>
-                <div id="queue-container" style="flex:1; border-left: 2px solid #333; padding-left:30px; overflow-y:auto;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <h2 style="font-size:1.8rem; margin:0; color:var(--accent-color);">Up Next</h2>
-                        <button onclick="clearQueue()" style="background:#442222; color:#ff8888; border:1px solid #663333; padding:10px 20px; border-radius:10px; cursor:pointer;">CLEAR</button>
-                    </div>
-                    <div id="queue-list"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Settings Overlay -->
-    <div id="overlay-settings" class="overlay">
-        <div class="close-btn" onclick="closeAllOverlays()">&#x2715;</div>
-        <h1 style="font-size:3rem; margin-bottom:20px; color:var(--accent-color);">Settings</h1>
-        <div style="width:100%; max-width:600px; display:flex; flex-direction:column; gap:20px;">
-            <div style="display:flex; flex-direction:column; gap:10px;">
-                <label style="font-size:1.2rem; opacity:0.7;">YouTube API Key</label>
-                <div style="display:flex; gap:10px;">
-                    <input type="password" id="settings-api-key" placeholder="Paste API Key here..." style="flex:1; background:#222; border:2px solid #444; color:white; padding:15px; border-radius:10px; font-size:1.2rem;">
-                    <button onclick="toggleApiKeyVisibility()" style="background:#333; color:white; border:none; padding:15px; border-radius:10px; font-size:1.5rem; cursor:pointer;">👁️</button>
-                </div>
-                <div id="test-result" style="font-size:1rem; text-align:center; min-height:1.2rem;"></div>
-                <div style="display:flex; gap:10px;">
-                    <button onclick="testApiKey()" style="flex:1; background:#444; color:white; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem; cursor:pointer;">TEST KEY</button>
-                    <button onclick="saveApiKey()" style="flex:1; background:var(--accent-color); color:black; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.1rem; cursor:pointer;">SAVE & RELOAD</button>
-                </div>
-            </div>
-            <hr style="width:100%; border:0; border-top:1px solid #333; margin:10px 0;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:1.5rem;">Driver Orientation</span>
-                <button id="btn-orientation" onclick="toggleOrientation()" style="background:#333; color:white; border:none; padding:15px 30px; border-radius:10px; font-size:1.2rem; width:220px; cursor:pointer;">LEFT (LHD)</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="script.js?v=2.9.9"></script>
+    <script src="script.js?v=3.0.0"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
