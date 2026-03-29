@@ -1,4 +1,4 @@
-// v2.6.0 (2026-03-28 15:30 HST): Floating transparent lyrics, speed controls, and auto-play fixes.
+// v2.7.0 (2026-03-28 16:00 HST): Side-by-Side Lyrics Mode (Video pushes right).
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -272,6 +272,9 @@ function changeScrollSpeed(delta) {
     if (scrollSpeed > 500) scrollSpeed = 500; // Min speed
     console.log("New Scroll Speed:", scrollSpeed);
     
+    var indicator = document.getElementById('speed-indicator');
+    if (indicator) indicator.innerText = scrollSpeed + "ms";
+
     // Restart scroll with new speed if active
     var overlay = document.getElementById('overlay-lyrics');
     if (overlay && overlay.classList.contains('active')) {
@@ -285,9 +288,11 @@ function toggleLyrics() {
     
     if (overlay.classList.contains('active')) {
         overlay.classList.remove('active');
+        document.body.classList.remove('lyrics-mode');
         stopLyricsScroll();
     } else {
         overlay.classList.add('active');
+        document.body.classList.add('lyrics-mode');
         fetchLyrics();
     }
 }
