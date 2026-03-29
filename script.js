@@ -39,10 +39,7 @@ function onYouTubeIframeAPIReady() {
 }
 
 function initSecondaryTasks() {
-    console.log("Initializing secondary dashboard tasks...");
-    applySettings();
-    updateClock();
-    setInterval(updateClock, 5000); // Only every 5s to save CPU
+    console.log("Initializing deferred background tasks...");
     syncWeather();
     setInterval(syncWeather, 600000);
 }
@@ -785,6 +782,10 @@ function getWeatherEmoji(code) {
 }
 
 // ── Init ──
+applySettings();
+updateClock();
+setInterval(updateClock, 5000); 
+
 var searchInput = document.getElementById('search-input');
 if (searchInput) {
     searchInput.onkeydown = function(e) { if ((e.keyCode || e.which) === 13) doSearch(); };
