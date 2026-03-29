@@ -1,4 +1,4 @@
-// v2.4.0 (2026-03-25 20:45 HST): Optimized for slow head-units (deferred shadow player, removed ad polling).
+// v2.4.2 (2026-03-28 14:15 HST): Optimized for slow head-units.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
