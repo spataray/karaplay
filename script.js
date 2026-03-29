@@ -1,4 +1,4 @@
-// v3.0.5 (2026-03-28 22:15 HST): Added Manual button and Markdown viewer.
+// v3.0.6 (2026-03-28 22:30 HST): Integrated Manual Panel (No more blocking overlay).
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -13,39 +13,43 @@ function togglePanel(panelId) {
     var targetPanel = document.getElementById('panel-' + panelId);
     var targetBtn = document.getElementById('btn-' + panelId + '-toggle');
     var isActive = targetPanel && targetPanel.classList.contains('active');
+    
+    // Close everything
     var allPanels = document.querySelectorAll('.tool-panel');
     for (var i = 0; i < allPanels.length; i++) allPanels[i].classList.remove('active');
     var allBtns = document.querySelectorAll('.side-btn');
     for (var j = 0; j < allBtns.length; j++) allBtns[j].classList.remove('active');
     body.classList.remove('panel-open');
     stopLyricsScroll();
+
     if (!isActive && targetPanel) {
         body.classList.add('panel-open');
         targetPanel.classList.add('active');
         if (targetBtn) targetBtn.classList.add('active');
+        
+        // Specific init logic
         if (panelId === 'lyrics') fetchLyrics();
         if (panelId === 'media') updateQueueList();
+        if (panelId === 'manual') fetchReadme();
     }
 }
 
-function openReadme() {
-    var overlay = document.getElementById('overlay-readme');
+function fetchReadme() {
     var contentEl = document.getElementById('readme-content');
-    overlay.classList.add('active');
-    contentEl.innerText = "Fetching manual...";
+    if (!contentEl) return;
+    contentEl.innerHTML = "Fetching manual...";
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'README.md', true);
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
             if (xhr.status === 200) {
-                // Convert simple markdown to basic HTML
                 var md = xhr.responseText;
-                var html = md.replace(/^# (.*$)/gm, '<h1 style="color:var(--accent-color);">$1</h1>')
-                             .replace(/^## (.*$)/gm, '<h2 style="color:var(--accent-color);">$1</h2>')
-                             .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                var html = md.replace(/^# (.*$)/gm, '<h1 style="color:var(--accent-color); font-size:1.8rem;">$1</h1>')
+                             .replace(/^## (.*$)/gm, '<h2 style="color:var(--accent-color); font-size:1.4rem; margin-top:20px;">$1</h2>')
+                             .replace(/^### (.*$)/gm, '<h3 style="font-size:1.1rem; margin-top:15px;">$1</h3>')
                              .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
                              .replace(/\*(.*?)\*/g, '<i>$1</i>')
-                             .replace(/^- (.*$)/gm, '• $1<br>')
+                             .replace(/^- (.*$)/gm, '<div style="margin-left:10px; margin-bottom:5px;">• $1</div>')
                              .replace(/\n/g, '<br>');
                 contentEl.innerHTML = html;
             } else { contentEl.innerText = "Error loading README.md"; }
@@ -55,18 +59,11 @@ function openReadme() {
 }
 
 function closeAllOverlays() {
-    var body = document.body;
-    body.classList.remove('panel-open');
-    var panels = document.querySelectorAll('.tool-panel');
-    for (var i = 0; i < panels.length; i++) panels[i].classList.remove('active');
-    var overlays = document.querySelectorAll('.overlay');
-    for (var j = 0; j < overlays.length; j++) overlays[j].classList.remove('active');
-    var btns = document.querySelectorAll('.side-btn');
-    for (var k = 0; k < btns.length; k++) btns[k].classList.remove('active');
+    document.body.classList.remove('panel-open');
+    var o = document.querySelectorAll('.overlay, .tool-panel, .side-btn');
+    for (var i=0; i<o.length; i++) o[i].classList.remove('active');
     stopLyricsScroll();
 }
-
-function openOverlay(id) { document.getElementById(id).classList.add('active'); }
 
 // ── Search & Queue ──
 function doSearch() {
@@ -127,10 +124,10 @@ function updateQueueList() {
                     var div = document.createElement('div');
                     div.className = 'search-item';
                     div.style.padding = "10px";
-                    div.innerHTML = '<img src="' + item.snippet.thumbnails.default.url + '" style="width:60px;"><div class="search-item-info"><div style="font-size:0.9rem; font-weight:bold;">' + item.snippet.title + '</div>' +
-                                    '<div style="display:flex; gap:10px; margin-top:5px;">' +
-                                    '<button onclick="playRadio(\''+item.id+'\')" class="mini-btn">PLAY</button>' +
-                                    '<button onclick="removeFromQueue(\''+item.id+'\')" class="mini-btn">DEL</button></div></div>';
+                    div.innerHTML = '<img src="' + item.snippet.thumbnails.default.url + '" style="width:60px;"><div class="search-item-info"><div style="font-size:0.8rem; font-weight:bold;">' + item.snippet.title + '</div>' +
+                                    '<div style="display:flex; gap:5px; margin-top:5px;">' +
+                                    '<button onclick="playRadio(\''+item.id+'\')" class="mini-btn" style="padding:5px;">PLAY</button>' +
+                                    '<button onclick="removeFromQueue(\''+item.id+'\')" class="mini-btn" style="padding:5px;">DEL</button></div></div>';
                     list.appendChild(div);
                 }
             } catch(e) {}
@@ -156,9 +153,7 @@ function onPlayerStateChange(event) {
         var videoId = data ? data.video_id : "";
         if (videoId) localStorage.setItem('kp_last_vid', videoId);
         updateTrackInfo();
-        if (document.getElementById('panel-lyrics').classList.contains('active')) {
-            setTimeout(function() { fetchLyrics(); }, 2000);
-        }
+        if (document.getElementById('panel-lyrics').classList.contains('active')) { setTimeout(function() { fetchLyrics(); }, 2000); }
     }
 }
 
@@ -166,7 +161,7 @@ function playRadio(videoId, isResume) {
     if (!playerReady) return;
     if (!isResume) { ensureShadowPlayer(); resolveAlgorithmicMix(videoId); }
     player.loadVideoById(videoId);
-    if (!isResume) closeAllOverlays();
+    if (!isResume) { closeAllOverlays(); }
 }
 
 function resolveAlgorithmicMix(videoId) {
@@ -386,7 +381,12 @@ function syncWeather() {
 }
 
 function initSecondaryTasks() { syncWeather(); setInterval(syncWeather, 600000); }
-function onPlayerReady(event) { playerReady = true; var lastVid = localStorage.getItem('kp_last_vid'); if (lastVid) playRadio(lastVid, true); }
+function onPlayerReady(event) {
+    playerReady = true;
+    var lastVid = localStorage.getItem('kp_last_vid');
+    if (lastVid) playRadio(lastVid, true);
+}
+function onPlayerError(e) { nextTrack(); }
 
 // ── Init ──
 applySettings();
