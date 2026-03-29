@@ -1,4 +1,4 @@
-// v3.0.2 (2026-03-28 21:30 HST): Fixed pointer-events for background clicks.
+// v3.0.5 (2026-03-28 22:15 HST): Added Manual button and Markdown viewer.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -7,35 +7,51 @@ var shadowPlayer = null;
 var shadowPlayerReady = false;
 var currentVideoId = "";
 
-// ── Panel Management (New System) ──
+// ── Panel Management ──
 function togglePanel(panelId) {
     var body = document.body;
     var targetPanel = document.getElementById('panel-' + panelId);
     var targetBtn = document.getElementById('btn-' + panelId + '-toggle');
-    
-    // Check if this panel is already active
     var isActive = targetPanel && targetPanel.classList.contains('active');
-    
-    // Close everything first
     var allPanels = document.querySelectorAll('.tool-panel');
     for (var i = 0; i < allPanels.length; i++) allPanels[i].classList.remove('active');
-    
     var allBtns = document.querySelectorAll('.side-btn');
     for (var j = 0; j < allBtns.length; j++) allBtns[j].classList.remove('active');
-    
     body.classList.remove('panel-open');
     stopLyricsScroll();
-
-    // If it wasn't active, open it
     if (!isActive && targetPanel) {
         body.classList.add('panel-open');
         targetPanel.classList.add('active');
         if (targetBtn) targetBtn.classList.add('active');
-        
-        // Specific init logic
         if (panelId === 'lyrics') fetchLyrics();
         if (panelId === 'media') updateQueueList();
     }
+}
+
+function openReadme() {
+    var overlay = document.getElementById('overlay-readme');
+    var contentEl = document.getElementById('readme-content');
+    overlay.classList.add('active');
+    contentEl.innerText = "Fetching manual...";
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'README.md', true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                // Convert simple markdown to basic HTML
+                var md = xhr.responseText;
+                var html = md.replace(/^# (.*$)/gm, '<h1 style="color:var(--accent-color);">$1</h1>')
+                             .replace(/^## (.*$)/gm, '<h2 style="color:var(--accent-color);">$1</h2>')
+                             .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                             .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                             .replace(/\*(.*?)\*/g, '<i>$1</i>')
+                             .replace(/^- (.*$)/gm, '• $1<br>')
+                             .replace(/\n/g, '<br>');
+                contentEl.innerHTML = html;
+            } else { contentEl.innerText = "Error loading README.md"; }
+        }
+    };
+    xhr.send();
 }
 
 function closeAllOverlays() {
@@ -50,11 +66,7 @@ function closeAllOverlays() {
     stopLyricsScroll();
 }
 
-function openOverlay(id) {
-    // Legacy support for setup/etc
-    var el = document.getElementById(id);
-    if (el) el.classList.add('active');
-}
+function openOverlay(id) { document.getElementById(id).classList.add('active'); }
 
 // ── Search & Queue ──
 function doSearch() {
@@ -63,7 +75,7 @@ function doSearch() {
     var activeKey = localStorage.getItem('yt_api_key');
     if (!activeKey) { alert("API Key Missing!"); return; }
     var resultsEl = document.getElementById('search-results');
-    resultsEl.innerHTML = "<div style='text-align:center; padding:40px; font-size:1.5rem;'>Searching...</div>";
+    resultsEl.innerHTML = "Searching...";
     var url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=" + encodeURIComponent(query) + "&type=video&videoEmbeddable=true&maxResults=10&key=" + activeKey;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -72,7 +84,7 @@ function doSearch() {
             try {
                 var data = JSON.parse(xhr.responseText);
                 displaySearchResults(data.items);
-            } catch(e) { resultsEl.innerText = "Error parsing."; }
+            } catch(e) { resultsEl.innerText = "Error."; }
         }
     };
     xhr.send();
@@ -99,12 +111,10 @@ function updateQueueList() {
     if (ids.length === 0) { list.innerText = "Queue empty."; return; }
     var activeKey = localStorage.getItem('yt_api_key');
     if (!activeKey) { list.innerText = "Key needed."; return; }
-
     var currentId = (player && player.getVideoData) ? player.getVideoData().video_id : "";
     var idx = ids.indexOf(currentId);
     var future = ids.slice(idx + 1, idx + 11);
     if (future.length === 0) { list.innerHTML = "<div style='opacity:0.5; padding:10px;'>No upcoming songs</div>"; return; }
-
     var url = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + future.join(',') + "&key=" + activeKey;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -146,7 +156,6 @@ function onPlayerStateChange(event) {
         var videoId = data ? data.video_id : "";
         if (videoId) localStorage.setItem('kp_last_vid', videoId);
         updateTrackInfo();
-        showUpNextToast();
         if (document.getElementById('panel-lyrics').classList.contains('active')) {
             setTimeout(function() { fetchLyrics(); }, 2000);
         }
@@ -155,19 +164,9 @@ function onPlayerStateChange(event) {
 
 function playRadio(videoId, isResume) {
     if (!playerReady) return;
-    if (!isResume) {
-        ensureShadowPlayer();
-        resolveAlgorithmicMix(videoId);
-    }
+    if (!isResume) { ensureShadowPlayer(); resolveAlgorithmicMix(videoId); }
     player.loadVideoById(videoId);
-    if (!isResume) {
-        var body = document.body;
-        body.classList.remove('panel-open');
-        var panels = document.querySelectorAll('.tool-panel');
-        for (var i = 0; i < panels.length; i++) panels[i].classList.remove('active');
-        var btns = document.querySelectorAll('.side-btn');
-        for (var j = 0; j < btns.length; j++) btns[j].classList.remove('active');
-    }
+    if (!isResume) closeAllOverlays();
 }
 
 function resolveAlgorithmicMix(videoId) {
@@ -206,24 +205,26 @@ function fetchLyrics() {
     var contentEl = document.getElementById('lyrics-content');
     contentEl.innerText = "Searching...";
     stopLyricsScroll();
-    var title = cleanTitle(data.title);
+    var songTitle = cleanTitle(data.title);
     var artist = cleanTitle(data.author);
     if (data.title.indexOf(' - ') !== -1) {
         var parts = data.title.split(' - ');
         artist = cleanTitle(parts[0]);
-        title = cleanTitle(parts[1]);
+        songTitle = cleanTitle(parts[1]);
     }
-    var url = "https://api.lyrics.ovh/v1/" + encodeURIComponent(artist) + "/" + encodeURIComponent(title);
+    var url = "https://api.lyrics.ovh/v1/" + encodeURIComponent(artist) + "/" + encodeURIComponent(songTitle);
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            try {
-                var resp = JSON.parse(xhr.responseText);
-                if (resp.lyrics) { contentEl.innerText = resp.lyrics; startLyricsScroll(); }
-                else { fetchFromYouTubeDescription(data.video_id); }
-            } catch(e) { fetchFromYouTubeDescription(data.video_id); }
-        } else if (xhr.readyState === 4) { fetchFromYouTubeDescription(data.video_id); }
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                try {
+                    var resp = JSON.parse(xhr.responseText);
+                    if (resp.lyrics) { contentEl.innerText = resp.lyrics; startLyricsScroll(); }
+                    else { fetchFromYouTubeDescription(data.video_id); }
+                } catch(e) { fetchFromYouTubeDescription(data.video_id); }
+            } else { fetchFromYouTubeDescription(data.video_id); }
+        }
     };
     xhr.send();
 }
@@ -298,10 +299,7 @@ function prevTrack() {
     else if (player && player.previousVideo) player.previousVideo();
 }
 
-function togglePlay() {
-    var s = player.getPlayerState();
-    if (s === 1) player.pauseVideo(); else player.playVideo();
-}
+function togglePlay() { var s = player.getPlayerState(); if (s === 1) player.pauseVideo(); else player.playVideo(); }
 
 function updateTrackInfo() {
     if (!player || !player.getVideoData) return;
@@ -310,33 +308,6 @@ function updateTrackInfo() {
     document.getElementById('track-author').innerText = d.author;
     var btn = document.getElementById('sidebar-btn-play');
     if (btn) btn.innerHTML = (player.getPlayerState() === 1) ? "&#9208;" : "&#9654;";
-}
-
-function showUpNextToast() {
-    var ids = idsInCurrentQueue();
-    var cur = (player && player.getVideoData) ? player.getVideoData().video_id : "";
-    var idx = ids.indexOf(cur);
-    if (idx === -1 || idx >= ids.length - 1) return;
-    var nextId = ids[idx + 1];
-    var activeKey = localStorage.getItem('yt_api_key');
-    var url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet&id=' + nextId + '&key=' + activeKey;
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            try {
-                var d = JSON.parse(xhr.responseText);
-                var t = d.items[0].snippet.title;
-                var toast = document.getElementById('up-next-toast');
-                if (toast) {
-                    document.querySelector('#up-next-toast #toast-title').innerText = t;
-                    toast.classList.add('active');
-                    setTimeout(function() { toast.classList.remove('active'); }, 8000);
-                }
-            } catch(e) {}
-        }
-    };
-    xhr.send();
 }
 
 function removeFromQueue(videoId) {
@@ -381,9 +352,7 @@ function testApiKey() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-            resultEl.innerText = (xhr.status === 200) ? "Key Valid! ✅" : "Invalid Key ❌";
-        }
+        if (xhr.readyState === 4) { resultEl.innerText = (xhr.status === 200) ? "Key Valid! ✅" : "Invalid Key ❌"; }
     };
     xhr.send();
 }
@@ -417,12 +386,7 @@ function syncWeather() {
 }
 
 function initSecondaryTasks() { syncWeather(); setInterval(syncWeather, 600000); }
-function onPlayerReady(event) {
-    playerReady = true;
-    var lastVid = localStorage.getItem('kp_last_vid');
-    if (lastVid) playRadio(lastVid, true);
-}
-function onPlayerError(e) { nextTrack(); }
+function onPlayerReady(event) { playerReady = true; var lastVid = localStorage.getItem('kp_last_vid'); if (lastVid) playRadio(lastVid, true); }
 
 // ── Init ──
 applySettings();

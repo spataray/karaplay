@@ -67,7 +67,7 @@
 
     </div>
 
-    <!-- [LAYER 2] Background Video Player -->
+    <!-- [LAYER 2] VIDEO PLAYER -->
     <div id="player-container">
         <div id="player"></div>
     </div>
@@ -77,18 +77,18 @@
         <div id="shadow-player"></div>
     </div>
 
-    <!-- [LAYER 3] Main UI Layer -->
+    <!-- [LAYER 3] MAIN UI Layer -->
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag">v3.0.4 (2026-03-28 22:00 HST)</div>
-
+        <div id="version-tag">v3.0.5 (2026-03-28 22:15 HST)</div>
         
         <!-- Sidebar -->
         <div id="sidebar">
             <div id="sidebar-top">
                 <div class="side-btn" id="btn-media-toggle" onclick="togglePanel('media')" title="Search">&#127911;</div>
                 <div class="side-btn" id="btn-lyrics-toggle" onclick="togglePanel('lyrics')" title="Lyrics" style="margin-top:20px;">🎤</div>
+                <div class="side-btn" onclick="openReadme()" title="Manual" style="margin-top:20px; font-size:1.5rem; font-weight:bold;">📖</div>
             </div>
             <div id="sidebar-bottom">
                 <div class="side-btn" id="btn-settings-toggle" onclick="togglePanel('settings')" title="Settings">&#9881;</div>
@@ -123,7 +123,6 @@
                 </div>
             </div>
 
-            <!-- Bottom Media Bar -->
             <div id="media-bar">
                 <div id="track-info">
                     <div id="track-title">Ready to Play</div>
@@ -134,7 +133,15 @@
 
     </div>
 
-    <script src="script.js?v=3.0.1"></script>
+    <!-- Readme Overlay (Full Markdown View) -->
+    <div id="overlay-readme" class="overlay">
+        <div class="close-btn" onclick="closeAllOverlays()">&#x2715;</div>
+        <div id="readme-content" style="width:100%; max-width:900px; height:100%; overflow-y:auto; background:#111; padding:60px; border-radius:30px; text-align:left; line-height:1.6; font-size:1.2rem;">
+            Loading manual...
+        </div>
+    </div>
+
+    <script src="script.js?v=3.0.5"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>

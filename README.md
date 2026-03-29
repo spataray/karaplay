@@ -2,46 +2,38 @@
 
 A minimalist, car-optimized YouTube music player designed for Android infotainment systems and tablet displays. Karaplay prioritizes driver accessibility and continuous music flow with zero distractions.
 
-## 🌟 Key Features
+## 🌟 Key Features (v3.0.0+)
 
-* **Unified Media Manager**: A single, two-column overlay combining Search, Search History, and your upcoming Queue for maximum efficiency while driving.
-* **Manual Queue Control (v2.0.0)**: A custom-built queuing engine that replaces buggy YouTube Mixes with a 100% reliable, script-controlled playlist. View, play now, or cancel upcoming tracks with ease.
-* **Recently Found**: Automatically saves your last 10 successful searches locally, allowing you to re-play your favorites without typing or spending API quota.
-* **Driver-Centric UI**: Oversized, high-contrast controls positioned on the driver side (supports LHD and RHD orientations).
-* **Fun Fact Overlay**: Automatically fetches and displays trivia or artist biographies from Wikipedia for every new song.
-* **Smart Up-Next Toast**: Sleek slide-in notifications that show you the title of the next track coming up.
+* **Unified Sliding Dashboard**: Search, Lyrics, and Settings are integrated into a background layer. Clicking a tool smoothly slides the entire UI (Video + Dashboard) to the right, revealing the tool without blocking buttons.
+* **Smart Lyrics Engine**: High-contrast, large-font lyrics with a custom **Auto-Scroll** engine. Includes real-time speed controls (`+` / `-`) and a Thai-friendly fallback that extracts lyrics from YouTube descriptions.
+* **Visual Queue Management**: Full list of upcoming songs with thumbnails and titles. Includes **PLAY NOW** and **DELETE** actions for manual flow control.
+* **Driver-Centric UI**: Oversized controls on the driver side, supporting both LHD (Left) and RHD (Right) orientations.
+* **Mobile-First Setup**: Guided setup via QR code. Scan with a phone to generate an API key and sync it to the car instantly via browser history.
 * **Dashboard Integration**: Large digital clock and live weather updates (Open-Meteo API).
-* **Legacy Compatibility**: Written in ES5 JavaScript to ensure smooth performance on older Smart TV and Car browsers (Android 4.4+ compatible).
-* **PWA Ready**: Optimized for "Add to Home Screen" to provide a clean, standalone fullscreen experience.
+* **Legacy Compatibility**: Written in ES5 JavaScript for maximum compatibility with older Android head units.
 
 ## 🛠️ Project Structure
 
-* `index.html`: Main player interface and layout.
-* `style.css`: Car-optimized styling with oversized touch targets.
-* `script.js`: Core logic, including manual queue management and YouTube API integration.
-* `config.js`: Central configuration for API keys.
+* `index.html`: Main interface with the 3-layer sliding architecture.
+* `setup.html`: Dedicated mobile instruction page for API key generation.
+* `style.css`: Layered styling with smooth cubic-bezier transitions.
+* `script.js`: Core engine (State machine, YouTube API, Lyrics parser).
 * `manifest.json`: Web App Manifest for PWA support.
 
 ## 🚀 Getting Started
 
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/spataray/karaplay.git
-   ```
-2. **Configuration**:
-   Open `config.js` and ensure your YouTube API Key is correctly set.
-3. **Deployment**:
-   Push to GitHub and enable **GitHub Pages** in the repository settings to get your public car URL.
-4. **In-Car Setup**:
-   Open the URL in your car's browser and use the "Add to Home Screen" option to launch it as a standalone app.
+1. **Deployment**: Push to GitHub and enable **GitHub Pages**.
+2. **Setup**: 
+   - Open the URL in your car.
+   - Scan the **QR Code** with your phone.
+   - Follow the phone instructions to create and sync your private YouTube API Key.
+3. **PWA Installation**: Use "Add to Home Screen" for a clean, full-screen experience.
 
-## 🎮 How to Use
+## 🎮 Navigation
 
-1. Tap the **Media (🎧)** button on the driver-side sidebar.
-2. **Search** for a song/artist or pick from your **Recently Found** history.
-3. Once selected, Karaplay starts the song and automatically builds a custom "Smart Radio" queue in the background.
-4. Manage your flow using the **Up Next** column on the right—tap a song to jump to it, or tap **✕** to cancel it.
-5. Use the **Gear (⚙️)** icon to toggle driver orientation or night mode.
+1. **Media (🎧)**: Search for songs and manage your upcoming queue.
+2. **Lyrics (🎤)**: View scrolling lyrics side-by-side with the video.
+3. **Settings (⚙️)**: Toggle driver orientation and manage your API keys.
 
 ---
-*Part of the T.A. Station Digital Signage ecosystem.*
+*Part of the T.A. Station Digital Signage ecosystem. v3.0.4 (2026-03-28)*
