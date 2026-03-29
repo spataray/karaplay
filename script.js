@@ -1,4 +1,4 @@
-// v3.0.8 (2026-03-28 23:00 HST): Sharp gold 'Up Next' toast pinned to right edge.
+// v3.0.9 (2026-03-28 23:15 HST): Removed Up Next for repositioning.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
