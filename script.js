@@ -1,4 +1,4 @@
-// v2.9.2 (2026-03-28 18:45 HST): Restored missing search and settings logic.
+// v2.9.3 (2026-03-28 19:00 HST): Restored Driver Orientation and Test Key logic.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -48,9 +48,31 @@ function testApiKey() {
     xhr.send();
 }
 
+function toggleApiKeyVisibility() {
+    var input = document.getElementById('settings-api-key');
+    if (input.type === 'password') input.type = 'text';
+    else input.type = 'password';
+}
+
+function toggleOrientation() {
+    var uiLayer = document.getElementById('ui-layer');
+    var btn = document.getElementById('btn-orientation');
+    var current = localStorage.getItem('driverOrientation') || 'left';
+    var next = (current === 'left') ? 'right' : 'left';
+    
+    localStorage.setItem('driverOrientation', next);
+    
+    if (next === 'right') {
+        uiLayer.classList.add('driver-right');
+        btn.innerText = "RIGHT (RHD)";
+    } else {
+        uiLayer.classList.remove('driver-right');
+        btn.innerText = "LEFT (LHD)";
+    }
+}
+
 // ── YouTube API Setup ──
 function onYouTubeIframeAPIReady() {
-    console.log("YouTube API Loading...");
     player = new YT.Player('player', {
         height: '100%', width: '100%',
         playerVars: { 'autoplay': 1, 'controls': 0, 'modestbranding': 1, 'rel': 0, 'iv_load_policy': 3, 'disablekb': 1, 'enablejsapi': 1 },
@@ -114,16 +136,11 @@ function onPlayerError(event) {
 function doSearch() {
     var query = document.getElementById('search-input').value;
     if (!query) return;
-    
     var activeKey = localStorage.getItem('yt_api_key');
     if (!activeKey) { alert("API Key Missing!"); return; }
-
     var resultsEl = document.getElementById('search-results');
-    resultsEl.innerHTML = "<div style='text-align:center; padding:40px; font-size:1.5rem;'>Searching YouTube...</div>";
-
-    var url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=" + encodeURIComponent(query) + 
-              "&type=video&videoEmbeddable=true&maxResults=10&key=" + activeKey;
-
+    resultsEl.innerHTML = "<div style='text-align:center; padding:40px; font-size:1.5rem;'>Searching...</div>";
+    var url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=" + encodeURIComponent(query) + "&type=video&videoEmbeddable=true&maxResults=10&key=" + activeKey;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.onreadystatechange = function() {
@@ -131,9 +148,7 @@ function doSearch() {
             try {
                 var data = JSON.parse(xhr.responseText);
                 displaySearchResults(data.items);
-            } catch(e) { resultsEl.innerText = "Error parsing results."; }
-        } else if (xhr.readyState === 4) {
-            resultsEl.innerText = "Search failed (Error " + xhr.status + ")";
+            } catch(e) { resultsEl.innerText = "Error."; }
         }
     };
     xhr.send();
@@ -142,20 +157,12 @@ function doSearch() {
 function displaySearchResults(items) {
     var resultsEl = document.getElementById('search-results');
     resultsEl.innerHTML = "";
-    if (!items || items.length === 0) {
-        resultsEl.innerText = "No results found.";
-        return;
-    }
     for (var i = 0; i < items.length; i++) {
         var item = items[i];
         var id = item.id.videoId;
-        var title = item.snippet.title;
-        var author = item.snippet.channelTitle;
-        var thumb = item.snippet.thumbnails.medium.url;
-
         var div = document.createElement('div');
         div.className = 'search-item';
-        div.innerHTML = '<img src="' + thumb + '"><div class="search-item-info"><div class="search-item-title">' + title + '</div><div class="search-item-author">' + author + '</div></div>';
+        div.innerHTML = '<img src="' + item.snippet.thumbnails.medium.url + '"><div class="search-item-info"><div class="search-item-title">' + item.snippet.title + '</div><div class="search-item-author">' + item.snippet.channelTitle + '</div></div>';
         div.onclick = (function(vid) { return function() { playRadio(vid); }; })(id);
         resultsEl.appendChild(div);
     }
@@ -163,14 +170,12 @@ function displaySearchResults(items) {
 
 function playRadio(videoId, isResume) {
     if (!playerReady) return;
-    
     if (!isResume) {
         ensureShadowPlayer();
         resolveAlgorithmicMix(videoId);
     }
-    
     player.loadVideoById(videoId);
-    if (!isResume) closeAllOverlays();
+    closeAllOverlays();
 }
 
 function resolveAlgorithmicMix(videoId) {
@@ -179,9 +184,7 @@ function resolveAlgorithmicMix(videoId) {
         return;
     }
     shadowPlayer.cuePlaylist({ 'list': 'RD' + videoId, 'listType': 'playlist', 'index': 0 });
-    var pollCount = 0;
     var poll = setInterval(function() {
-        pollCount++;
         if (shadowPlayer.getPlaylist) {
             var pl = shadowPlayer.getPlaylist();
             if (pl && pl.length > 1) {
@@ -190,8 +193,8 @@ function resolveAlgorithmicMix(videoId) {
                 updateQueueList();
             }
         }
-        if (pollCount > 20) clearInterval(poll);
     }, 1000);
+    setTimeout(function() { clearInterval(poll); }, 20000);
 }
 
 // ── Lyrics Engine ──
@@ -202,8 +205,7 @@ function changeScrollSpeed(delta) {
     scrollSpeed += delta;
     if (scrollSpeed < 20) scrollSpeed = 20;
     if (scrollSpeed > 500) scrollSpeed = 500;
-    var indicator = document.getElementById('speed-indicator');
-    if (indicator) indicator.innerText = scrollSpeed + "ms";
+    document.getElementById('speed-indicator').innerText = scrollSpeed + "ms";
     if (document.body.classList.contains('lyrics-mode')) startLyricsScroll(true);
 }
 
@@ -245,16 +247,14 @@ function fetchLyrics() {
     var contentEl = document.getElementById('lyrics-content');
     contentEl.innerText = "Searching...";
     stopLyricsScroll();
-    
-    var title = cleanTitle(data.title);
+    var songTitle = cleanTitle(data.title);
     var artist = cleanTitle(data.author);
     if (data.title.indexOf(' - ') !== -1) {
         var parts = data.title.split(' - ');
         artist = cleanTitle(parts[0]);
-        title = cleanTitle(parts[1]);
+        songTitle = cleanTitle(parts[1]);
     }
-
-    var url = "https://api.lyrics.ovh/v1/" + encodeURIComponent(artist) + "/" + encodeURIComponent(title);
+    var url = "https://api.lyrics.ovh/v1/" + encodeURIComponent(artist) + "/" + encodeURIComponent(songTitle);
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.onreadystatechange = function() {
@@ -264,9 +264,7 @@ function fetchLyrics() {
                 if (resp.lyrics) { contentEl.innerText = resp.lyrics; startLyricsScroll(); }
                 else { contentEl.innerText = "Lyrics not found."; }
             } catch(e) { contentEl.innerText = "Error."; }
-        } else if (xhr.readyState === 4) {
-            contentEl.innerText = "Lyrics not found.";
-        }
+        } else if (xhr.readyState === 4) { contentEl.innerText = "Lyrics not found."; }
     };
     xhr.send();
 }
@@ -282,14 +280,11 @@ function cleanTitle(title) {
 function showUpNextToast() {
     var ids = idsInCurrentQueue();
     var data = player.getVideoData();
-    var currentId = data ? data.video_id : "";
-    var idx = ids.indexOf(currentId);
+    var idx = ids.indexOf(data ? data.video_id : "");
     if (ids.length === 0 || idx === -1 || idx >= ids.length - 1) return;
-    
     var nextVideoId = ids[idx + 1];
     var activeKey = localStorage.getItem('yt_api_key');
     if (!activeKey) return;
-
     var url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet&id=' + nextVideoId + '&key=' + activeKey;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -315,11 +310,9 @@ function showUpNextToast() {
 function nextTrack() {
     try {
         var ids = idsInCurrentQueue();
-        if (ids.length > 0) {
-            var data = player.getVideoData();
-            var idx = ids.indexOf(data ? data.video_id : "");
-            if (idx + 1 < ids.length) { player.loadVideoById(ids[idx + 1]); return; }
-        }
+        var data = player.getVideoData();
+        var idx = ids.indexOf(data ? data.video_id : "");
+        if (idx + 1 < ids.length) { player.loadVideoById(ids[idx + 1]); return; }
     } catch(e) {}
     if (player && player.nextVideo) player.nextVideo();
 }
@@ -327,11 +320,9 @@ function nextTrack() {
 function prevTrack() {
     try {
         var ids = idsInCurrentQueue();
-        if (ids.length > 0) {
-            var data = player.getVideoData();
-            var idx = ids.indexOf(data ? data.video_id : "");
-            if (idx > 0) { player.loadVideoById(ids[idx - 1]); return; }
-        }
+        var data = player.getVideoData();
+        var idx = ids.indexOf(data ? data.video_id : "");
+        if (idx > 0) { player.loadVideoById(ids[idx - 1]); return; }
     } catch(e) {}
     if (player && player.previousVideo) player.previousVideo();
 }
@@ -359,13 +350,15 @@ function updateQueueList() {
     var list = document.getElementById('queue-list');
     if (!list) return;
     var ids = idsInCurrentQueue();
-    list.innerHTML = ids.length === 0 ? "Queue empty." : "Total songs: " + ids.length;
+    list.innerHTML = "";
+    if (ids.length === 0) { list.innerText = "Queue empty."; return; }
+    var count = document.createElement('div');
+    count.style.padding = "10px";
+    count.innerText = "Total songs in queue: " + ids.length;
+    list.appendChild(count);
 }
 
-function clearQueue() {
-    localStorage.removeItem('kp_cached_queue');
-    updateQueueList();
-}
+function clearQueue() { localStorage.removeItem('kp_cached_queue'); updateQueueList(); }
 
 function applySettings() {
     var savedKey = localStorage.getItem('yt_api_key');
@@ -375,7 +368,12 @@ function applySettings() {
         if (kInput) kInput.value = savedKey;
     }
     var orientation = localStorage.getItem('driverOrientation') || 'left';
-    if (orientation === 'right') document.getElementById('ui-layer').classList.add('driver-right');
+    var uiLayer = document.getElementById('ui-layer');
+    var btn = document.getElementById('btn-orientation');
+    if (orientation === 'right') {
+        uiLayer.classList.add('driver-right');
+        if (btn) btn.innerText = "RIGHT (RHD)";
+    }
     if (!savedKey) document.getElementById('overlay-setup').style.display = 'flex';
 }
 
