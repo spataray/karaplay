@@ -136,6 +136,12 @@ function onPlayerStateChange(event) {
         updateTrackInfo();
         showUpNextToast();
         
+        // Refresh lyrics if overlay is open
+        var lyricsOverlay = document.getElementById('overlay-lyrics');
+        if (lyricsOverlay && lyricsOverlay.classList.contains('active')) {
+            setTimeout(function() { fetchLyrics(); }, 2000);
+        }
+
         // Fun Fact Overlay
         if (data && data.title) {
             showFunFact(data.title, data.author);
@@ -320,27 +326,24 @@ function fetchLyrics() {
     var rawTitle = data.title;
     var artist = data.author;
     
-    var titleEl = document.getElementById('lyrics-title');
-    var artistEl = document.getElementById('lyrics-artist');
     var contentEl = document.getElementById('lyrics-content');
-    
     contentEl.innerText = "Searching for lyrics...";
     stopLyricsScroll();
     
-    // Try to split artist/title if YouTube title has a dash
-    var songTitle = rawTitle;
+    // Clean strings
+    var songTitle = cleanTitle(rawTitle);
+    var cleanArtist = cleanTitle(artist);
+
+    // If title contains artist, try to split
     if (rawTitle.indexOf(' - ') !== -1) {
         var parts = rawTitle.split(' - ');
-        artist = cleanTitle(parts[0]);
+        cleanArtist = cleanTitle(parts[0]);
         songTitle = cleanTitle(parts[1]);
-    } else {
-        songTitle = cleanTitle(rawTitle);
     }
 
-    titleEl.innerText = songTitle;
-    artistEl.innerText = artist;
+    console.log("Fetching lyrics for:", cleanArtist, "-", songTitle);
 
-    var url = "https://api.lyrics.ovh/v1/" + encodeURIComponent(artist) + "/" + encodeURIComponent(songTitle);
+    var url = "https://api.lyrics.ovh/v1/" + encodeURIComponent(cleanArtist) + "/" + encodeURIComponent(songTitle);
     
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -353,17 +356,30 @@ function fetchLyrics() {
                         contentEl.innerText = resp.lyrics;
                         startLyricsScroll();
                     } else {
-                        contentEl.innerText = "Lyrics not found for this song.";
+                        // Fallback retry with just title if artist failed
+                        contentEl.innerText = "Lyrics not found. Retrying simple search...";
+                        setTimeout(function() { fetchLyricsSimple(songTitle); }, 1000);
                     }
                 } catch(e) {
                     contentEl.innerText = "Error parsing lyrics.";
                 }
             } else {
-                contentEl.innerText = "Lyrics not available.";
+                contentEl.innerText = "Lyrics not found. Retrying simple search...";
+                setTimeout(function() { fetchLyricsSimple(songTitle); }, 1000);
             }
         }
     };
     xhr.send();
+}
+
+function fetchLyricsSimple(query) {
+    var contentEl = document.getElementById('lyrics-content');
+    // Simple search often works better for YT titles
+    var url = "https://api.lyrics.ovh/v1/search?q=" + encodeURIComponent(query);
+    // Note: lyrics.ovh /v1/ artist/title is more reliable than search if formatted correctly.
+    // Since search API is different, we just try one more artist/title guess.
+    var clean = query.replace(/lyrics/gi, "").trim();
+    contentEl.innerText = "No exact match for " + clean;
 }
 
 function showUpNextToast() {
