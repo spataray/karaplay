@@ -1,4 +1,4 @@
-// v2.4.2 (2026-03-28 14:15 HST): Optimized for slow head-units.
+// v2.4.3 (2026-03-28 14:30 HST): Added private API key setup overlay (removed config.js dependency).
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -7,6 +7,16 @@ var shadowPlayer = null;
 var shadowPlayerReady = false;
 var currentVideoId = "";
 var isAdPlaying = false;
+
+function saveSetupKey() {
+    var key = document.getElementById('setup-key-input').value.trim();
+    if (key && key.length > 20) {
+        localStorage.setItem('yt_api_key', key);
+        window.location.reload();
+    } else {
+        alert("Please enter a valid YouTube API Key (starts with AIza...).");
+    }
+}
 
 // ── YouTube API Setup ──
 function onYouTubeIframeAPIReady() {
@@ -514,6 +524,28 @@ function applySettings() {
             return;
         } catch(e) {}
     }
+    
+    var savedKey = null;
+    try {
+        savedKey = localStorage.getItem('yt_api_key');
+        if (savedKey) {
+            window.YT_API_KEY = savedKey;
+            var keyInput = document.getElementById('settings-api-key');
+            if (keyInput) keyInput.value = savedKey;
+            
+            // Hide setup overlay if it exists
+            var setupOverlay = document.getElementById('overlay-setup');
+            if (setupOverlay) setupOverlay.style.display = 'none';
+        } else {
+            // Show setup overlay if no key
+            var setupOverlay = document.getElementById('overlay-setup');
+            if (setupOverlay) {
+                setupOverlay.style.display = 'flex';
+                setupOverlay.classList.add('active');
+            }
+        }
+    } catch(e) {}
+
     var orientation = 'left';
     try { orientation = localStorage.getItem('driverOrientation') || 'left'; } catch(e) {}
     if (orientation === 'right') {
@@ -522,14 +554,6 @@ function applySettings() {
         if (uiLayer) uiLayer.classList.add('driver-right');
         if (btn) btn.innerText = "RIGHT (RHD)";
     }
-    try {
-        var savedKey = localStorage.getItem('yt_api_key');
-        if (savedKey) {
-            window.YT_API_KEY = savedKey;
-            var keyInput = document.getElementById('settings-api-key');
-            if (keyInput) keyInput.value = savedKey;
-        }
-    } catch(e) {}
 }
 
 function getQueryParam(name) {
