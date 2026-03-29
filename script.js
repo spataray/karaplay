@@ -1,4 +1,4 @@
-// v2.9.7 (2026-03-28 20:00 HST): Added YouTube Description Fallback for Thai lyrics.
+// v2.9.8 (2026-03-28 20:15 HST): Restored Queue Actions (Play Now / Delete).
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -255,7 +255,6 @@ function fetchLyrics() {
         songTitle = cleanTitle(parts[1]);
     }
 
-    // Try primary source (Western database)
     var url = "https://api.lyrics.ovh/v1/" + encodeURIComponent(artist) + "/" + encodeURIComponent(songTitle);
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -264,10 +263,8 @@ function fetchLyrics() {
             if (xhr.status === 200) {
                 try {
                     var resp = JSON.parse(xhr.responseText);
-                    if (resp.lyrics) { 
-                        contentEl.innerText = resp.lyrics; 
-                        startLyricsScroll(); 
-                    } else { fetchFromYouTubeDescription(videoId); }
+                    if (resp.lyrics) { contentEl.innerText = resp.lyrics; startLyricsScroll(); }
+                    else { fetchFromYouTubeDescription(videoId); }
                 } catch(e) { fetchFromYouTubeDescription(videoId); }
             } else { fetchFromYouTubeDescription(videoId); }
         }
@@ -279,7 +276,6 @@ function fetchFromYouTubeDescription(videoId) {
     var contentEl = document.getElementById('lyrics-content');
     var activeKey = localStorage.getItem('yt_api_key');
     if (!activeKey) { contentEl.innerText = "Lyrics not found."; return; }
-
     var url = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + videoId + "&key=" + activeKey;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -289,14 +285,9 @@ function fetchFromYouTubeDescription(videoId) {
                 var data = JSON.parse(xhr.responseText);
                 if (data.items && data.items.length > 0) {
                     var desc = data.items[0].snippet.description;
-                    // Attempt to find lyrics in description (common in Thai MVs)
                     var lyricsText = extractLyricsFromDesc(desc);
-                    if (lyricsText) {
-                        contentEl.innerText = lyricsText;
-                        startLyricsScroll();
-                    } else {
-                        contentEl.innerText = "Lyrics not found in database or description.";
-                    }
+                    if (lyricsText) { contentEl.innerText = lyricsText; startLyricsScroll(); }
+                    else { contentEl.innerText = "Lyrics not found."; }
                 }
             } catch(e) { contentEl.innerText = "Lyrics not found."; }
         }
@@ -306,19 +297,16 @@ function fetchFromYouTubeDescription(videoId) {
 
 function extractLyricsFromDesc(desc) {
     if (!desc) return null;
-    // Look for common Thai/English markers for lyrics
     var markers = ["เนื้อเพลง", "Lyrics:", "Verse 1", "Chorus:", "LYRICS"];
     for (var i = 0; i < markers.length; i++) {
         var idx = desc.indexOf(markers[i]);
         if (idx !== -1) {
             var block = desc.substring(idx);
-            // Clean up URLs and social media links common in descriptions
             block = block.replace(/https?:\/\/\S+/g, "");
             block = block.replace(/Follow us.*/gi, "");
             return block.trim();
         }
     }
-    // If no marker found, but description is long, it might just be the lyrics
     if (desc.split('\n').length > 10) return desc.trim();
     return null;
 }
@@ -392,7 +380,7 @@ function updateTrackInfo() {
     document.getElementById('track-title').innerText = cleanTitle(d.title);
     document.getElementById('track-author').innerText = d.author;
     var btn = document.getElementById('sidebar-btn-play');
-    if (btn) btn.innerHTML = "&#9208;";
+    if (btn) btn.innerHTML = (player.getPlayerState() === 1) ? "&#9208;" : "&#9654;";
 }
 
 function idsInCurrentQueue() {
@@ -408,26 +396,56 @@ function updateQueueList() {
     if (ids.length === 0) { list.innerText = "Queue empty."; return; }
     var activeKey = localStorage.getItem('yt_api_key');
     if (!activeKey) { list.innerText = "Add API key to see titles."; return; }
-    var nextIds = ids.slice(0, 10).join(',');
-    var url = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + nextIds + "&key=" + activeKey;
+
+    var data = player.getVideoData();
+    var currentId = data ? data.video_id : "";
+    var currentIdx = ids.indexOf(currentId);
+    var futureIds = ids.slice(currentIdx + 1, currentIdx + 11); // Show next 10
+
+    if (futureIds.length === 0) { list.innerHTML = "<div style='padding:20px; opacity:0.5;'>No upcoming songs</div>"; return; }
+
+    var url = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + futureIds.join(',') + "&key=" + activeKey;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4 && xhr.status === 200) {
             try {
-                var data = JSON.parse(xhr.responseText);
-                for (var i = 0; i < data.items.length; i++) {
-                    var item = data.items[i];
+                var d = JSON.parse(xhr.responseText);
+                for (var i = 0; i < d.items.length; i++) {
+                    var item = d.items[i];
+                    var id = item.id;
+                    var title = item.snippet.title;
+                    var thumb = item.snippet.thumbnails.default.url;
+
                     var div = document.createElement('div');
                     div.className = 'search-item';
                     div.style.padding = "10px";
-                    div.innerHTML = '<img src="' + item.snippet.thumbnails.default.url + '" style="width:80px;"><div class="search-item-info"><div class="search-item-title" style="font-size:1rem;">' + item.snippet.title + '</div></div>';
+                    div.style.display = "flex";
+                    div.style.gap = "15px";
+                    div.style.alignItems = "center";
+                    
+                    div.innerHTML = '<img src="' + thumb + '" style="width:80px; border-radius:10px;">' +
+                                    '<div style="flex:1;"><div style="font-size:1rem; font-weight:bold; margin-bottom:10px;">' + title + '</div>' +
+                                    '<div style="display:flex; gap:10px;">' +
+                                    '<button onclick="playRadio(\''+id+'\')" style="background:var(--accent-color); color:black; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer;">PLAY NOW</button>' +
+                                    '<button onclick="removeFromQueue(\''+id+'\')" style="background:#442222; color:#ff8888; border:1px solid #663333; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer;">DELETE</button>' +
+                                    '</div></div>';
                     list.appendChild(div);
                 }
             } catch(e) {}
         }
     };
     xhr.send();
+}
+
+function removeFromQueue(videoId) {
+    var ids = idsInCurrentQueue();
+    var idx = ids.indexOf(videoId);
+    if (idx !== -1) {
+        ids.splice(idx, 1);
+        localStorage.setItem('kp_cached_queue', JSON.stringify(ids));
+        updateQueueList();
+    }
 }
 
 function clearQueue() { localStorage.removeItem('kp_cached_queue'); updateQueueList(); }
