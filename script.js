@@ -1,4 +1,4 @@
-// v2.9.8 (2026-03-28 20:15 HST): Restored Queue Actions (Play Now / Delete).
+// v2.9.9 (2026-03-28 20:30 HST): Snug lyrics panel alignment.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;

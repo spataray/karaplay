@@ -16,7 +16,7 @@ body, html {
 
 /* [LAYER 1] BACKGROUND LYRICS */
 #lyrics-bg-layer {
-    position: absolute; top: 0; left: 280px; width: 30%; height: 100%;
+    position: absolute; top: 0; left: 100px; width: 35%; height: 100%;
     z-index: 1; display: flex; flex-direction: column;
     padding: 150px 30px 150px 30px; box-sizing: border-box;
     opacity: 0; transition: opacity 0.5s ease;
