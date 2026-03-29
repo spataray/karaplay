@@ -56,17 +56,14 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
     top: 50%;
     transform: translateY(-50%);
     width: 0;
-    height: 50%; /* Adjusted height to match video better */
+    height: 50%;
     background: rgba(0,0,0,0.6);
     backdrop-filter: blur(10px);
     border-radius: 20px;
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-    overflow: hidden;
+    display: flex; flex-direction: column;
+    padding: 0; overflow: hidden;
     transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 50;
-    border: 1px solid rgba(255,255,255,0.1);
+    z-index: 50; border: 1px solid rgba(255,255,255,0.1);
 }
 
 .lyrics-mode #lyrics-panel {
@@ -84,7 +81,7 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
     text-shadow: 0 0 10px black; font-weight: bold; text-align: left;
 }
 
-/* Speed Controls inside Panel */
+/* Speed Controls */
 #lyrics-speed-controls {
     margin-top: 20px; display: flex; align-items:center; gap:15px; pointer-events: auto;
 }
@@ -97,22 +94,22 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
 
 .speed-label { flex: 1; text-align: center; font-size: 0.8rem; font-weight: bold; color: var(--accent-color); }
 
-/* Sidebar Buttons */
-.side-btn {
-    width: 70px; height: 70px; background: var(--glass-bg);
-    border: 2px solid rgba(255,255,255,0.2); border-radius: 20px;
-    color: white; font-size: 2rem; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; touch-action: manipulation;
+/* Up Next Toast - Gold Box on Far Right */
+#up-next-toast {
+    position: fixed; top: 40px; right: 40px; width: 450px;
+    background: rgba(255, 204, 0, 0.9); /* Solid Gold */
+    border: 4px solid #fff; border-radius: 25px;
+    padding: 30px; z-index: 200; opacity: 0;
+    transform: translateX(100%); transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8); pointer-events: none;
+    color: #000; /* Black text on gold */
 }
 
-/* Overlays (Media Manager / Settings) - MUST have background and high z-index */
-.overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.95); z-index: 1000;
-    display: none; align-items: center; justify-content: center;
-    padding: 100px; box-sizing: border-box; pointer-events: auto;
-}
-.overlay.active { display: flex; }
+#up-next-toast.active { opacity: 1; transform: translateX(0); }
+
+#toast-label { font-size: 1rem; font-weight: 900; letter-spacing: 3px; margin-bottom: 10px; opacity: 0.7; }
+#toast-title { font-size: 2rem; font-weight: 900; line-height: 1.2; word-wrap: break-word; }
+#toast-history { font-size: 1.1rem; margin-top: 15px; font-weight: 600; opacity: 0.8; }
 
 /* Dashboard Info */
 #dashboard {
@@ -122,8 +119,22 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
 #clock { font-size: 3.5rem; font-weight: 900; }
 #weather { font-size: 1.5rem; font-weight: bold; opacity: 0.8; }
 
-/* Mirroring */
-#ui-layer.driver-right #dashboard { left: auto; right: 300px; align-items: flex-end; }
+/* Sidebar Buttons */
+.side-btn {
+    width: 70px; height: 70px; background: var(--glass-bg);
+    border: 2px solid rgba(255,255,255,0.2); border-radius: 20px;
+    color: white; font-size: 2rem; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; touch-action: manipulation;
+}
+
+/* Overlays */
+.overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95); z-index: 1000;
+    display: none; align-items: center; justify-content: center;
+    padding: 100px; box-sizing: border-box; pointer-events: auto;
+}
+.overlay.active { display: flex; }
 
 /* Media Bar */
 #media-bar {
@@ -141,12 +152,3 @@ iframe { width: 100%; height: 100%; border: none; opacity: 0.4; }
 }
 
 #search-input { width: 100%; max-width: 800px; background: #222; border: 2px solid #444; border-radius: 15px; padding: 20px; color: white; font-size: 2rem; }
-
-/* Up Next Items */
-.search-item {
-    display: flex; gap: 20px; padding: 15px; background: #1a1a1a;
-    border-radius: 15px; align-items: center; border: 2px solid transparent;
-}
-.search-item img { width: 120px; border-radius: 10px; }
-.search-item-info { flex: 1; }
-.search-item-title { font-size: 1.2rem; font-weight: bold; }
