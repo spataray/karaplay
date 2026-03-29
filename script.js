@@ -1,4 +1,4 @@
-// v2.7.1 (2026-03-28 16:15 HST): Narrow side-panel lyrics, no close button (mic toggles).
+// v2.8.0 (2026-03-28 16:30 HST): Integrated Side-Panel (True Split-Screen), no clicking issues.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -136,9 +136,9 @@ function onPlayerStateChange(event) {
         updateTrackInfo();
         showUpNextToast();
         
-        // Refresh lyrics if overlay is open
-        var lyricsOverlay = document.getElementById('overlay-lyrics');
-        if (lyricsOverlay && lyricsOverlay.classList.contains('active')) {
+        // Refresh lyrics if panel is open
+        var lyricsPanel = document.getElementById('lyrics-panel');
+        if (lyricsPanel && lyricsPanel.classList.contains('active')) {
             setTimeout(function() { fetchLyrics(); }, 2000);
         }
 
@@ -268,31 +268,32 @@ var scrollSpeed = 150; // ms per pixel
 
 function changeScrollSpeed(delta) {
     scrollSpeed += delta;
-    if (scrollSpeed < 20) scrollSpeed = 20; // Max speed
-    if (scrollSpeed > 500) scrollSpeed = 500; // Min speed
-    console.log("New Scroll Speed:", scrollSpeed);
+    if (scrollSpeed < 20) scrollSpeed = 20;
+    if (scrollSpeed > 500) scrollSpeed = 500;
     
     var indicator = document.getElementById('speed-indicator');
     if (indicator) indicator.innerText = scrollSpeed + "ms";
 
-    // Restart scroll with new speed if active
-    var overlay = document.getElementById('overlay-lyrics');
-    if (overlay && overlay.classList.contains('active')) {
-        startLyricsScroll(true); // true = no delay
+    var panel = document.getElementById('lyrics-panel');
+    if (panel && panel.classList.contains('active')) {
+        startLyricsScroll(true);
     }
 }
 
 function toggleLyrics() {
-    var overlay = document.getElementById('overlay-lyrics');
-    if (!overlay) return;
+    var panel = document.getElementById('lyrics-panel');
+    var btn = document.getElementById('btn-lyrics-toggle');
+    if (!panel) return;
     
-    if (overlay.classList.contains('active')) {
-        overlay.classList.remove('active');
+    if (panel.classList.contains('active')) {
+        panel.classList.remove('active');
         document.body.classList.remove('lyrics-mode');
+        if (btn) btn.style.background = "var(--glass-bg)";
         stopLyricsScroll();
     } else {
-        overlay.classList.add('active');
+        panel.classList.add('active');
         document.body.classList.add('lyrics-mode');
+        if (btn) btn.style.background = "var(--accent-color)";
         fetchLyrics();
     }
 }
@@ -314,7 +315,8 @@ function startLyricsScroll(noDelay) {
     var delay = noDelay ? 0 : 5000;
     
     setTimeout(function() {
-        if (!document.getElementById('overlay-lyrics').classList.contains('active')) return;
+        var panel = document.getElementById('lyrics-panel');
+        if (!panel || !panel.classList.contains('active')) return;
         
         lyricsScrollInterval = setInterval(function() {
             container.scrollTop += 1;
@@ -327,6 +329,10 @@ function startLyricsScroll(noDelay) {
 
 function fetchLyrics() {
     if (!player || !player.getVideoData) return;
+    
+    var panel = document.getElementById('lyrics-panel');
+    if (!panel || !panel.classList.contains('active')) return;
+
     var data = player.getVideoData();
     var rawTitle = data.title;
     var artist = data.author;
