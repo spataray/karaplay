@@ -1,59 +1,18 @@
+// v2.4.0 (2026-03-25 20:45 HST): Optimized for slow head-units (deferred shadow player, removed ad polling).
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
 var playerReady = false;
-var shadowPlayer;
+var shadowPlayer = null;
 var shadowPlayerReady = false;
 var currentVideoId = "";
 var isAdPlaying = false;
-
-// ── Ad Detection & Layout ──
-function checkAdStatus() {
-    if (!player || !player.getVideoData) return;
-    
-    var data = player.getVideoData();
-    var isCurrentlyAd = false;
-
-    // Method 1: Check Video Data Properties
-    if (data && (data.isAd || data.ad === 1)) {
-        isCurrentlyAd = true;
-    }
-
-    // Method 2: Check for 'Advertisement' in title
-    if (data && data.title && data.title.indexOf('Advertisement') !== -1) {
-        isCurrentlyAd = true;
-    }
-
-    // Method 3: Internal Ad State
-    if (player.getAdState && player.getAdState() > 0) {
-        isCurrentlyAd = true;
-    }
-
-    // Update Layout if state changed
-    if (isCurrentlyAd !== isAdPlaying) {
-        isAdPlaying = isCurrentlyAd;
-        toggleAdLayout(isAdPlaying);
-    }
-}
-
-function toggleAdLayout(isAd) {
-    if (isAd) {
-        console.log("AD DETECTED: Shrinking player...");
-        document.body.classList.add('ad-mode');
-    } else {
-        console.log("AD FINISHED: Returning to full screen.");
-        document.body.classList.remove('ad-mode');
-    }
-}
-
-// Start polling for ads
-setInterval(checkAdStatus, 1000);
 
 // ── YouTube API Setup ──
 function onYouTubeIframeAPIReady() {
     console.log("YouTube API Loading...");
     
-    // Main Player
+    // Main Player (High Priority)
     player = new YT.Player('player', {
         height: '100%',
         width: '100%',
@@ -73,7 +32,25 @@ function onYouTubeIframeAPIReady() {
         }
     });
 
-    // Shadow Player (Background Resolver)
+    // Defer non-critical startup tasks by 3 seconds
+    setTimeout(function() {
+        initSecondaryTasks();
+    }, 3000);
+}
+
+function initSecondaryTasks() {
+    console.log("Initializing secondary dashboard tasks...");
+    applySettings();
+    updateClock();
+    setInterval(updateClock, 5000); // Only every 5s to save CPU
+    syncWeather();
+    setInterval(syncWeather, 600000);
+}
+
+// Lazy-load Shadow Player only when Mixes/Queue resolution is needed
+function ensureShadowPlayer() {
+    if (shadowPlayer) return;
+    console.log("Lazy-loading Shadow Player for background resolution...");
     shadowPlayer = new YT.Player('shadow-player', {
         height: '1px',
         width: '1px',
@@ -399,6 +376,7 @@ function playRadio(videoId, isResume) {
 
     // 2. Resolve true YouTube Mix IDs in the background via Shadow Player
     if (!isResume) {
+        ensureShadowPlayer();
         resolveAlgorithmicMix(videoId);
     }
     
@@ -807,12 +785,6 @@ function getWeatherEmoji(code) {
 }
 
 // ── Init ──
-applySettings();
-updateClock();
-setInterval(updateClock, 1000);
-syncWeather();
-setInterval(syncWeather, 600000);
-
 var searchInput = document.getElementById('search-input');
 if (searchInput) {
     searchInput.onkeydown = function(e) { if ((e.keyCode || e.which) === 13) doSearch(); };
