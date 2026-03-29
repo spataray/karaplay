@@ -1,4 +1,4 @@
-// v2.9.3 (2026-03-28 19:00 HST): Restored Driver Orientation and Test Key logic.
+// v2.9.4 (2026-03-28 19:15 HST): Restored full Queue Display logic.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -59,9 +59,7 @@ function toggleOrientation() {
     var btn = document.getElementById('btn-orientation');
     var current = localStorage.getItem('driverOrientation') || 'left';
     var next = (current === 'left') ? 'right' : 'left';
-    
     localStorage.setItem('driverOrientation', next);
-    
     if (next === 'right') {
         uiLayer.classList.add('driver-right');
         btn.innerText = "RIGHT (RHD)";
@@ -352,10 +350,31 @@ function updateQueueList() {
     var ids = idsInCurrentQueue();
     list.innerHTML = "";
     if (ids.length === 0) { list.innerText = "Queue empty."; return; }
-    var count = document.createElement('div');
-    count.style.padding = "10px";
-    count.innerText = "Total songs in queue: " + ids.length;
-    list.appendChild(count);
+    
+    var activeKey = localStorage.getItem('yt_api_key');
+    if (!activeKey) { list.innerText = "Add API key to see titles."; return; }
+
+    // Fetch titles for the first 10 items in queue
+    var nextIds = ids.slice(0, 10).join(',');
+    var url = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + nextIds + "&key=" + activeKey;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                for (var i = 0; i < data.items.length; i++) {
+                    var item = data.items[i];
+                    var div = document.createElement('div');
+                    div.className = 'search-item';
+                    div.style.padding = "10px";
+                    div.innerHTML = '<img src="' + item.snippet.thumbnails.default.url + '" style="width:80px;"><div class="search-item-info"><div class="search-item-title" style="font-size:1rem;">' + item.snippet.title + '</div></div>';
+                    list.appendChild(div);
+                }
+            } catch(e) {}
+        }
+    };
+    xhr.send();
 }
 
 function clearQueue() { localStorage.removeItem('kp_cached_queue'); updateQueueList(); }
@@ -377,7 +396,10 @@ function applySettings() {
     if (!savedKey) document.getElementById('overlay-setup').style.display = 'flex';
 }
 
-function openOverlay(id) { document.getElementById(id).classList.add('active'); }
+function openOverlay(id) { 
+    document.getElementById(id).classList.add('active'); 
+    if (id === 'overlay-media') updateQueueList();
+}
 function closeAllOverlays() { var o = document.querySelectorAll('.overlay'); for (var i=0; i<o.length; i++) o[i].classList.remove('active'); }
 
 function updateClock() {
