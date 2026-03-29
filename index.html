@@ -12,7 +12,7 @@
 </head>
 <body class="dash-mode">
 
-    <!-- [LAYER 1] TOOLS BACKGROUND (Revealed by push) -->
+    <!-- [LAYER 1] TOOLS BACKGROUND -->
     <div id="tools-layer">
         
         <!-- Lyrics Panel -->
@@ -65,7 +65,7 @@
             </div>
         </div>
 
-        <!-- Manual Panel (Newly Integrated) -->
+        <!-- Manual Panel -->
         <div id="panel-manual" class="tool-panel">
             <h2 class="panel-title">User Manual</h2>
             <div id="readme-content" style="flex:1; overflow-y:auto; padding-right:10px; font-size:1.1rem; line-height:1.5; color:rgba(255,255,255,0.8);">
@@ -89,7 +89,7 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag">v3.0.7 (2026-03-28 22:45 HST)</div>
+        <div id="version-tag">v3.0.8 (2026-03-28 23:00 HST)</div>
         
         <!-- Sidebar -->
         <div id="sidebar">
@@ -110,6 +110,7 @@
 
         <!-- Sliding Content Wrapper -->
         <div id="content-wrapper">
+            <!-- Dashboard Info -->
             <div id="dashboard">
                 <div id="clock">00:00 AM</div>
                 <div id="weather">--°F</div>
@@ -130,6 +131,13 @@
                 </div>
             </div>
 
+            <!-- UP NEXT TOAST - Pinned Right -->
+            <div id="up-next-toast">
+                <div id="toast-label">UP NEXT</div>
+                <div id="toast-title">Song Title</div>
+            </div>
+
+            <!-- Bottom Media Bar -->
             <div id="media-bar">
                 <div id="track-info">
                     <div id="track-title">Ready to Play</div>
@@ -140,13 +148,7 @@
 
     </div>
 
-    <!-- Setup/Key Overlay (Rarely used now) -->
-    <div id="overlay-setup-full" class="overlay">
-        <div class="close-btn" onclick="closeAllOverlays()">&#x2715;</div>
-        <!-- Keep legacy content if needed -->
-    </div>
-
-    <script src="script.js?v=3.0.6"></script>
+    <script src="script.js?v=3.0.8"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>

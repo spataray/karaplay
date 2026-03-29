@@ -1,4 +1,4 @@
-// v3.0.7 (2026-03-28 22:45 HST): Fixed API key loading into settings field.
+// v3.0.8 (2026-03-28 23:00 HST): Sharp gold 'Up Next' toast pinned to right edge.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -27,10 +27,11 @@ function togglePanel(panelId) {
         targetPanel.classList.add('active');
         if (targetBtn) targetBtn.classList.add('active');
         
-        // Specific init logic
+        // Refresh data based on panel
         if (panelId === 'lyrics') fetchLyrics();
         if (panelId === 'media') updateQueueList();
         if (panelId === 'manual') fetchReadme();
+        if (panelId === 'settings') applySettings(); // Ensure key loads when opening
     }
 }
 
@@ -318,8 +319,8 @@ function applySettings() {
     var savedKey = localStorage.getItem('yt_api_key');
     if (savedKey) {
         window.YT_API_KEY = savedKey;
-        var keyInput = document.getElementById('settings-api-key');
-        if (keyInput) keyInput.value = savedKey;
+        var kInput = document.getElementById('settings-api-key');
+        if (kInput) kInput.value = savedKey;
     }
     var orientation = localStorage.getItem('driverOrientation') || 'left';
     if (orientation === 'right') document.getElementById('ui-layer').classList.add('driver-right');
@@ -385,12 +386,7 @@ function syncWeather() {
 }
 
 function initSecondaryTasks() { syncWeather(); setInterval(syncWeather, 600000); }
-function onPlayerReady(event) {
-    playerReady = true;
-    var lastVid = localStorage.getItem('kp_last_vid');
-    if (lastVid) playRadio(lastVid, true);
-}
-function onPlayerError(e) { nextTrack(); }
+function onPlayerReady(event) { playerReady = true; var lastVid = localStorage.getItem('kp_last_vid'); if (lastVid) playRadio(lastVid, true); }
 
 // ── Init ──
 applySettings();
