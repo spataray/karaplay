@@ -1,4 +1,4 @@
-// v2.4.3 (2026-03-28 14:30 HST): Added private API key setup overlay (removed config.js dependency).
+// v2.5.0 (2026-03-28 15:00 HST): Added Lyrics Overlay via lyrics.ovh API.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -254,6 +254,68 @@ function cleanTitle(title) {
         clean = clean.replace(junk[i], "");
     }
     return clean.trim();
+}
+
+function toggleLyrics() {
+    var overlay = document.getElementById('overlay-lyrics');
+    if (!overlay) return;
+    
+    if (overlay.classList.contains('active')) {
+        overlay.classList.remove('active');
+    } else {
+        overlay.classList.add('active');
+        fetchLyrics();
+    }
+}
+
+function fetchLyrics() {
+    if (!player || !player.getVideoData) return;
+    var data = player.getVideoData();
+    var rawTitle = data.title;
+    var artist = data.author;
+    
+    var titleEl = document.getElementById('lyrics-title');
+    var artistEl = document.getElementById('lyrics-artist');
+    var contentEl = document.getElementById('lyrics-content');
+    
+    contentEl.innerText = "Searching for lyrics...";
+    
+    // Try to split artist/title if YouTube title has a dash
+    var songTitle = rawTitle;
+    if (rawTitle.indexOf(' - ') !== -1) {
+        var parts = rawTitle.split(' - ');
+        artist = cleanTitle(parts[0]);
+        songTitle = cleanTitle(parts[1]);
+    } else {
+        songTitle = cleanTitle(rawTitle);
+    }
+
+    titleEl.innerText = songTitle;
+    artistEl.innerText = artist;
+
+    var url = "https://api.lyrics.ovh/v1/" + encodeURIComponent(artist) + "/" + encodeURIComponent(songTitle);
+    
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                try {
+                    var resp = JSON.parse(xhr.responseText);
+                    if (resp.lyrics) {
+                        contentEl.innerText = resp.lyrics;
+                    } else {
+                        contentEl.innerText = "Lyrics not found for this song.";
+                    }
+                } catch(e) {
+                    contentEl.innerText = "Error parsing lyrics.";
+                }
+            } else {
+                contentEl.innerText = "Lyrics not available.";
+            }
+        }
+    };
+    xhr.send();
 }
 
 function showUpNextToast() {

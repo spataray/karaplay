@@ -26,7 +26,7 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag" style="position: fixed; bottom: 10px; left: 10px; font-size: 14px; color: rgba(255,255,255,0.6); z-index: 1000; font-family: monospace; font-weight: bold; text-shadow: 1px 1px 2px black;">v2.4.4 (2026-03-28 14:45 HST)</div>
+        <div id="version-tag" style="position: fixed; bottom: 10px; left: 10px; font-size: 14px; color: rgba(255,255,255,0.6); z-index: 1000; font-family: monospace; font-weight: bold; text-shadow: 1px 1px 2px black;">v2.5.0 (2026-03-28 15:00 HST)</div>
         
         <!-- API Key Setup Overlay -->
         <div id="overlay-setup" class="overlay active" style="display:none; flex-direction:row; padding:40px; gap:40px;">
@@ -71,6 +71,7 @@
         <div id="sidebar">
             <div id="sidebar-top">
                 <div class="side-btn" onclick="openOverlay('overlay-media')" title="Media Manager">&#127911;</div>
+                <div class="side-btn" onclick="toggleLyrics()" title="Lyrics" style="margin-top:20px;">🎤</div>
             </div>
 
             <div id="sidebar-bottom">
@@ -171,6 +172,16 @@
                 <span style="font-size:1.5rem;">Show Video Background</span>
                 <input type="checkbox" checked style="width:40px; height:40px; cursor:pointer; touch-action: manipulation;">
             </div>
+        </div>
+    </div>
+
+    <!-- Lyrics Overlay -->
+    <div id="overlay-lyrics" class="overlay">
+        <div class="close-btn" onclick="closeAllOverlays()">&#x2715;</div>
+        <div id="lyrics-container" style="width:100%; max-width:800px; text-align:center; overflow-y:auto; padding:40px 20px; display:flex; flex-direction:column; align-items:center;">
+            <h1 id="lyrics-title" style="font-size:3rem; color:var(--accent-color); margin-bottom:10px;">Lyrics</h1>
+            <h2 id="lyrics-artist" style="font-size:1.5rem; opacity:0.7; margin-bottom:40px;">Artist Name</h2>
+            <div id="lyrics-content" style="font-size:2.2rem; line-height:1.6; white-space:pre-wrap;">Loading lyrics...</div>
         </div>
     </div>
 
