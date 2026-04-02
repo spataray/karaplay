@@ -1,3 +1,4 @@
+// v3.2.5 (2026-04-02 01:03 HST): Made lyrics panel transparent and kept video full-screen.
 // v3.2.4 (2026-04-01 23:46 HST): Removed iframe opacity to brighten the video.
 // v3.2.3 (2026-04-01 23:20 HST): Improved safety for player data access.
 // v3.2.2 (2026-04-01 22:38 HST): Added early weather init and robust player queuing.
@@ -24,11 +25,12 @@ function togglePanel(panelId) {
     for (var i = 0; i < allPanels.length; i++) allPanels[i].classList.remove('active');
     var allBtns = document.querySelectorAll('.side-btn');
     for (var j = 0; j < allBtns.length; j++) allBtns[j].classList.remove('active');
-    body.classList.remove('panel-open');
+    body.classList.remove('panel-open', 'lyrics-open');
     stopLyricsScroll();
 
     if (!isActive && targetPanel) {
         body.classList.add('panel-open');
+        if (panelId === 'lyrics') body.classList.add('lyrics-open');
         targetPanel.classList.add('active');
         if (targetBtn) targetBtn.classList.add('active');
         
