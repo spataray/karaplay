@@ -1,4 +1,4 @@
-/* Karaplay v3.2.0 - Expanded Media Manager for Car Use */
+/* Karaplay v3.2.1 - Enhanced Interactions for Car Use */
 :root {
     --car-bg: #0a0a0a;
     --accent-color: #ffcc00;
@@ -18,7 +18,7 @@ body, html {
 /* [LAYER 1] TOOLS */
 #tools-layer {
     position: absolute; top: 0; left: 280px; width: var(--slide-width); height: 100%;
-    z-index: 20; pointer-events: auto;
+    z-index: 30; pointer-events: auto;
 }
 .tool-panel {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -37,6 +37,8 @@ body, html {
 .panel-split { display: flex; gap: 20px; flex: 1; overflow: hidden; }
 #search-results { flex: 1.5; overflow-y: auto; }
 #queue-side { flex: 1; border-left: 1px solid #333; padding-left: 20px; overflow-y: auto; }
+
+.search-item:active { background: var(--accent-color); color: black; }
 
 /* [LAYER 2] VIDEO */
 #player-container {

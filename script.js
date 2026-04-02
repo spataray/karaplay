@@ -1,3 +1,4 @@
+// v3.2.1 (2026-04-01 22:28 HST): Fixed click interactions and z-index issues.
 // v3.2.0 (2026-04-01 22:21 HST): Expanded Media Manager width and improved touch targets for car use.
 // v3.1.0 (2026-03-28 23:30 HST): Repositioned Up Next toast to avoid clock.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
@@ -92,12 +93,18 @@ function doSearch() {
 function displaySearchResults(items) {
     var resultsEl = document.getElementById('search-results');
     resultsEl.innerHTML = "";
+    if (!items || items.length === 0) { resultsEl.innerText = "No results found."; return; }
     for (var i = 0; i < items.length; i++) {
         var item = items[i];
+        if (!item.id || !item.id.videoId) continue;
         var div = document.createElement('div');
         div.className = 'search-item';
+        div.setAttribute('role', 'button');
         div.innerHTML = '<img src="' + item.snippet.thumbnails.medium.url + '"><div class="search-item-info"><div class="search-item-title">' + item.snippet.title + '</div></div>';
-        div.onclick = (function(vid) { return function() { playRadio(vid); }; })(item.id.videoId);
+        div.onclick = (function(vid) { return function() { 
+            console.log("Playing video: " + vid);
+            playRadio(vid); 
+        }; })(item.id.videoId);
         resultsEl.appendChild(div);
     }
 }
