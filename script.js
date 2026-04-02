@@ -1,3 +1,4 @@
+// v3.2.0 (2026-04-01 22:21 HST): Expanded Media Manager width and improved touch targets for car use.
 // v3.1.0 (2026-03-28 23:30 HST): Repositioned Up Next toast to avoid clock.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
