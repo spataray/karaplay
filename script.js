@@ -1,3 +1,4 @@
+// v3.2.6 (2026-04-02 01:17 HST): Fixed play/pause button icon update on state change.
 // v3.2.5 (2026-04-02 01:03 HST): Made lyrics panel transparent and kept video full-screen.
 // v3.2.4 (2026-04-01 23:46 HST): Removed iframe opacity to brighten the video.
 // v3.2.3 (2026-04-01 23:20 HST): Improved safety for player data access.
@@ -163,11 +164,11 @@ function onYouTubeIframeAPIReady() {
 
 function onPlayerStateChange(event) {
     if (event.data === 0) { setTimeout(function() { nextTrack(); }, 500); return; }
+    updateTrackInfo();
     if (event.data === 1) {
         var data = player.getVideoData();
         var videoId = data ? data.video_id : "";
         if (videoId) localStorage.setItem('kp_last_vid', videoId);
-        updateTrackInfo();
         if (document.getElementById('panel-lyrics').classList.contains('active')) { setTimeout(function() { fetchLyrics(); }, 2000); }
     }
 }
