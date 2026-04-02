@@ -1,3 +1,4 @@
+// v3.2.8 (2026-04-02 09:20 HST): Fixed linting (missing var declarations) and ES5 compatibility.
 // v3.2.7 (2026-04-02 09:16 HST): Added manual scroll override for lyrics.
 // v3.2.6 (2026-04-02 01:17 HST): Fixed play/pause button icon update on state change.
 // v3.2.5 (2026-04-02 01:03 HST): Made lyrics panel transparent and kept video full-screen.
@@ -14,6 +15,8 @@ var playerReady = false;
 var shadowPlayer = null;
 var shadowPlayerReady = false;
 var currentVideoId = "";
+var isManualScrolling = false;
+var manualScrollTimeout = null;
 
 // ── Panel Management ──
 function togglePanel(panelId) {
@@ -233,8 +236,6 @@ function ensureShadowPlayer() {
 // ── Lyrics ──
 var lyricsScrollInterval = null;
 var scrollSpeed = 150;
-var isManualScrolling = false;
-var manualScrollTimeout = null;
 
 function fetchLyrics() {
     var panel = document.getElementById('panel-lyrics');
