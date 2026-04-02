@@ -30,7 +30,8 @@ body, html {
 .tool-panel.active { display: flex; animation: fadeIn 0.5s ease; }
 .panel-title { font-size: 2.2rem; color: var(--accent-color); margin: 0 0 20px 0; }
 
-#lyrics-container { flex: 1; overflow: hidden; position: relative; }
+#lyrics-container { flex: 1; overflow-y: auto; position: relative; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }
+#lyrics-container::-webkit-scrollbar { display: none; }
 #lyrics-content { font-size: 1.8rem; line-height: 1.5; font-weight: bold; color: white; text-shadow: 0 0 10px black; }
 .tool-controls, #lyrics-speed-controls { margin-top: 20px; display: flex; align-items: center; justify-content: space-between; gap: 15px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; }
 

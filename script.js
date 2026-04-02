@@ -1,3 +1,4 @@
+// v3.2.7 (2026-04-02 09:16 HST): Added manual scroll override for lyrics.
 // v3.2.6 (2026-04-02 01:17 HST): Fixed play/pause button icon update on state change.
 // v3.2.5 (2026-04-02 01:03 HST): Made lyrics panel transparent and kept video full-screen.
 // v3.2.4 (2026-04-01 23:46 HST): Removed iframe opacity to brighten the video.
@@ -31,7 +32,10 @@ function togglePanel(panelId) {
 
     if (!isActive && targetPanel) {
         body.classList.add('panel-open');
-        if (panelId === 'lyrics') body.classList.add('lyrics-open');
+        if (panelId === 'lyrics') {
+            body.classList.add('lyrics-open');
+            initLyricsInteraction();
+        }
         targetPanel.classList.add('active');
         if (targetBtn) targetBtn.classList.add('active');
         
@@ -41,6 +45,18 @@ function togglePanel(panelId) {
         if (panelId === 'manual') fetchReadme();
         if (panelId === 'settings') applySettings(); // Ensure key loads when opening
     }
+}
+
+function initLyricsInteraction() {
+    var container = document.getElementById('lyrics-container');
+    if (!container) return;
+    container.onscroll = function() {
+        isManualScrolling = true;
+        clearTimeout(manualScrollTimeout);
+        manualScrollTimeout = setTimeout(function() {
+            isManualScrolling = false;
+        }, 3000); // Resume auto-scroll after 3 seconds of no manual movement
+    };
 }
 
 function fetchReadme() {
@@ -217,6 +233,8 @@ function ensureShadowPlayer() {
 // ── Lyrics ──
 var lyricsScrollInterval = null;
 var scrollSpeed = 150;
+var isManualScrolling = false;
+var manualScrollTimeout = null;
 
 function fetchLyrics() {
     var panel = document.getElementById('panel-lyrics');
@@ -291,8 +309,10 @@ function startLyricsScroll(noDelay) {
     setTimeout(function() {
         if (!document.getElementById('panel-lyrics').classList.contains('active')) return;
         lyricsScrollInterval = setInterval(function() {
-            container.scrollTop += 1;
-            if (container.scrollTop + container.clientHeight >= container.scrollHeight) stopLyricsScroll();
+            if (!isManualScrolling) {
+                container.scrollTop += 1;
+                if (container.scrollTop + container.clientHeight >= container.scrollHeight) stopLyricsScroll();
+            }
         }, scrollSpeed);
     }, noDelay ? 0 : 5000);
 }
