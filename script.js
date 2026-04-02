@@ -1,3 +1,4 @@
+// v3.2.4 (2026-04-01 23:46 HST): Removed iframe opacity to brighten the video.
 // v3.2.3 (2026-04-01 23:20 HST): Improved safety for player data access.
 // v3.2.2 (2026-04-01 22:38 HST): Added early weather init and robust player queuing.
 // v3.2.1 (2026-04-01 22:28 HST): Fixed click interactions and z-index issues.
