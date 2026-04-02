@@ -1,3 +1,4 @@
+// v3.2.2 (2026-04-01 22:38 HST): Added early weather init and robust player queuing.
 // v3.2.1 (2026-04-01 22:28 HST): Fixed click interactions and z-index issues.
 // v3.2.0 (2026-04-01 22:21 HST): Expanded Media Manager width and improved touch targets for car use.
 // v3.1.0 (2026-03-28 23:30 HST): Repositioned Up Next toast to avoid clock.
@@ -147,12 +148,13 @@ function updateQueueList() {
 
 // ── YouTube Engine ──
 function onYouTubeIframeAPIReady() {
+    console.log("YouTube API Ready");
     player = new YT.Player('player', {
         height: '100%', width: '100%',
         playerVars: { 'autoplay': 1, 'controls': 0, 'modestbranding': 1, 'rel': 0, 'iv_load_policy': 3, 'disablekb': 1, 'enablejsapi': 1 },
         events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange, 'onError': onPlayerError }
     });
-    setTimeout(function() { initSecondaryTasks(); }, 3000);
+    setTimeout(function() { initSecondaryTasks(); }, 1000);
 }
 
 function onPlayerStateChange(event) {
@@ -167,10 +169,19 @@ function onPlayerStateChange(event) {
 }
 
 function playRadio(videoId, isResume) {
-    if (!playerReady) return;
+    console.log("playRadio called for: " + videoId + " (ready: " + playerReady + ")");
+    if (!playerReady) { 
+        console.warn("Player not ready yet, queuing...");
+        setTimeout(function() { playRadio(videoId, isResume); }, 1000);
+        return; 
+    }
     if (!isResume) { ensureShadowPlayer(); resolveAlgorithmicMix(videoId); }
-    player.loadVideoById(videoId);
-    if (!isResume) { closeAllOverlays(); }
+    try {
+        player.loadVideoById(videoId);
+        if (!isResume) { closeAllOverlays(); }
+    } catch(e) {
+        console.error("Error loading video:", e);
+    }
 }
 
 function resolveAlgorithmicMix(videoId) {
@@ -399,7 +410,11 @@ function onPlayerReady(event) { playerReady = true; var lastVid = localStorage.g
 // ── Init ──
 applySettings();
 updateClock();
+initSecondaryTasks();
 setInterval(updateClock, 5000);
 var sInput = document.getElementById('search-input');
 if (sInput) sInput.onkeydown = function(e) { if ((e.keyCode || e.which) === 13) doSearch(); };
+
+function onPlayerError(e) { console.error("YouTube Player Error:", e.data); }
+
 if (window.YT && window.YT.Player && !player) onYouTubeIframeAPIReady();
