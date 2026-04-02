@@ -1,3 +1,4 @@
+// v3.2.3 (2026-04-01 23:20 HST): Improved safety for player data access.
 // v3.2.2 (2026-04-01 22:38 HST): Added early weather init and robust player queuing.
 // v3.2.1 (2026-04-01 22:28 HST): Fixed click interactions and z-index issues.
 // v3.2.0 (2026-04-01 22:21 HST): Expanded Media Manager width and improved touch targets for car use.
@@ -216,12 +217,14 @@ var scrollSpeed = 150;
 function fetchLyrics() {
     var panel = document.getElementById('panel-lyrics');
     if (!panel || !panel.classList.contains('active')) return;
+    if (!player || typeof player.getVideoData !== 'function') return;
     var data = player.getVideoData();
+    if (!data || !data.title) return;
     var contentEl = document.getElementById('lyrics-content');
     contentEl.innerText = "Searching...";
     stopLyricsScroll();
     var songTitle = cleanTitle(data.title);
-    var artist = cleanTitle(data.author);
+    var artist = cleanTitle(data.author || "");
     if (data.title.indexOf(' - ') !== -1) {
         var parts = data.title.split(' - ');
         artist = cleanTitle(parts[0]);
@@ -317,12 +320,15 @@ function prevTrack() {
 function togglePlay() { var s = player.getPlayerState(); if (s === 1) player.pauseVideo(); else player.playVideo(); }
 
 function updateTrackInfo() {
-    if (!player || !player.getVideoData) return;
+    if (!player || typeof player.getVideoData !== 'function') return;
     var d = player.getVideoData();
+    if (!d || !d.title) return;
     document.getElementById('track-title').innerText = cleanTitle(d.title);
-    document.getElementById('track-author').innerText = d.author;
+    document.getElementById('track-author').innerText = d.author || "Unknown Artist";
     var btn = document.getElementById('sidebar-btn-play');
-    if (btn) btn.innerHTML = (player.getPlayerState() === 1) ? "&#9208;" : "&#9654;";
+    if (btn && typeof player.getPlayerState === 'function') {
+        btn.innerHTML = (player.getPlayerState() === 1) ? "&#9208;" : "&#9654;";
+    }
 }
 
 function removeFromQueue(videoId) {
