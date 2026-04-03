@@ -1,3 +1,4 @@
+// v3.3.6 (2026-04-02 22:25 HST): Increased scroll sensitivity and adjusted speed range.
 // v3.3.5 (2026-04-02 22:15 HST): Moved lyrics speed controls to sidebar for better accessibility.
 // v3.3.4 (2026-04-02 22:05 HST): Improved next/prev track logic and robustness when queue index is lost.
 // v3.3.3 (2026-04-02 21:55 HST): Improved auto-scroll reliability (switched to direct user input events).
@@ -245,7 +246,7 @@ function ensureShadowPlayer() {
 
 // ── Lyrics ──
 var lyricsScrollInterval = null;
-var scrollSpeed = 150;
+var scrollSpeed = 80;
 
 function fetchLyrics() {
     var panel = document.getElementById('panel-lyrics');
@@ -306,7 +307,8 @@ function fetchFromYouTubeDescription(videoId) {
 function changeScrollSpeed(delta) {
     scrollSpeed += delta;
     if (scrollSpeed < 20) scrollSpeed = 20;
-    if (scrollSpeed > 500) scrollSpeed = 500;
+    if (scrollSpeed > 300) scrollSpeed = 300;
+    console.log("Scroll speed set to:", scrollSpeed, "ms");
     document.getElementById('speed-indicator').innerText = scrollSpeed + "ms";
     startLyricsScroll(true);
 }
@@ -321,7 +323,7 @@ function startLyricsScroll(noDelay) {
         if (!document.getElementById('panel-lyrics').classList.contains('active')) return;
         lyricsScrollInterval = setInterval(function() {
             if (!isManualScrolling) {
-                container.scrollTop += 1;
+                container.scrollTop += 2;
                 if (container.scrollTop + container.clientHeight >= container.scrollHeight) stopLyricsScroll();
             }
         }, scrollSpeed);
