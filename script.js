@@ -1,3 +1,4 @@
+// v3.3.3 (2026-04-02 21:55 HST): Improved auto-scroll reliability (switched to direct user input events).
 // v3.3.2 (2026-04-02 21:50 HST): Fixed setup widget interaction (pointer-events blocking).
 // v3.3.1 (2026-04-02 21:32 HST): Improved input interactivity and pointer event handling for car screens.
 // v3.3.0 (2026-04-02 21:10 HST): Added ESLint and fixed linting warnings (empty catch blocks).
@@ -20,7 +21,6 @@ var shadowPlayer = null;
 var shadowPlayerReady = false;
 var currentVideoId = "";
 var isManualScrolling = false;
-var isProgrammaticScroll = false;
 var manualScrollTimeout = null;
 
 // ── Panel Management ──
@@ -58,14 +58,16 @@ function togglePanel(panelId) {
 function initLyricsInteraction() {
     var container = document.getElementById('lyrics-container');
     if (!container) return;
-    container.onscroll = function() {
-        if (isProgrammaticScroll) return;
+    var setManual = function() {
         isManualScrolling = true;
         clearTimeout(manualScrollTimeout);
         manualScrollTimeout = setTimeout(function() {
             isManualScrolling = false;
         }, 3000); // Resume auto-scroll after 3 seconds of no manual movement
     };
+    container.onmousedown = setManual;
+    container.ontouchstart = setManual;
+    container.onwheel = setManual;
 }
 
 function fetchReadme() {
@@ -317,11 +319,7 @@ function startLyricsScroll(noDelay) {
         if (!document.getElementById('panel-lyrics').classList.contains('active')) return;
         lyricsScrollInterval = setInterval(function() {
             if (!isManualScrolling) {
-                isProgrammaticScroll = true;
                 container.scrollTop += 1;
-                // Most browsers fire onscroll synchronously during the scrollTop update.
-                // Resetting it immediately after is safe for synchronous environments.
-                isProgrammaticScroll = false;
                 if (container.scrollTop + container.clientHeight >= container.scrollHeight) stopLyricsScroll();
             }
         }, scrollSpeed);
