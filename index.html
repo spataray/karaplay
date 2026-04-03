@@ -30,7 +30,7 @@
         <!-- Search / Media Manager Panel -->
         <div id="panel-media" class="tool-panel">
             <h2 class="panel-title">Media Manager</h2>
-            <input type="search" id="search-input" placeholder="Search song or artist..." autocomplete="off">
+            <input type="search" id="search-input" placeholder="Search song or artist..." autocomplete="off" style="user-select:text !important; pointer-events:auto !important;">
             <div class="panel-split">
                 <div id="search-results"></div>
                 <div id="queue-side">
@@ -49,7 +49,7 @@
             <div class="setting-group">
                 <label>YouTube API Key</label>
                 <div style="display:flex; gap:10px;">
-                    <input type="password" id="settings-api-key" placeholder="Paste key here..." style="flex:1;">
+                    <input type="password" id="settings-api-key" placeholder="Paste key here..." style="flex:1; user-select:text !important; pointer-events:auto !important;">
                     <button onclick="toggleApiKeyVisibility()" class="mini-btn">👁️</button>
                 </div>
                 <div id="test-result"></div>
@@ -89,7 +89,7 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag">v3.2.9 (2026-04-02 20:54 HST)</div>
+        <div id="version-tag">v3.3.1 (2026-04-02 21:32 HST)</div>
         
         <!-- Sidebar -->
         <div id="sidebar">

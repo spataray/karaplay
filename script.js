@@ -1,3 +1,4 @@
+// v3.3.1 (2026-04-02 21:32 HST): Improved input interactivity and pointer event handling for car screens.
 // v3.3.0 (2026-04-02 21:10 HST): Added ESLint and fixed linting warnings (empty catch blocks).
 // v3.2.9 (2026-04-02 20:53 HST): Fixed auto-scroll logic (prevented self-triggering manual override).
 // v3.2.8 (2026-04-02 09:20 HST): Fixed linting (missing var declarations) and ES5 compatibility.
