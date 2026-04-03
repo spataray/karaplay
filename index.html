@@ -89,7 +89,7 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag">v3.3.1 (2026-04-02 21:32 HST)</div>
+        <div id="version-tag">v3.3.2 (2026-04-02 21:50 HST)</div>
         
         <!-- Sidebar -->
         <div id="sidebar">
@@ -117,11 +117,11 @@
             </div>
 
             <!-- Integrated Setup Widget -->
-            <div id="setup-widget" style="display:none;">
+            <div id="setup-widget" style="display:none; pointer-events:auto !important;">
                 <div class="setup-card">
                     <div class="setup-info">
                         <h2>API Key Required</h2>
-                        <input type="password" id="setup-key-input" placeholder="Paste AIza... key">
+                        <input type="password" id="setup-key-input" placeholder="Paste AIza... key" style="user-select:text !important; pointer-events:auto !important;">
                         <button onclick="saveSetupKey()" class="gold-btn">SAVE & START</button>
                     </div>
                     <div class="setup-qr">

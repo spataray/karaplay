@@ -1,3 +1,4 @@
+// v3.3.2 (2026-04-02 21:50 HST): Fixed setup widget interaction (pointer-events blocking).
 // v3.3.1 (2026-04-02 21:32 HST): Improved input interactivity and pointer event handling for car screens.
 // v3.3.0 (2026-04-02 21:10 HST): Added ESLint and fixed linting warnings (empty catch blocks).
 // v3.2.9 (2026-04-02 20:53 HST): Fixed auto-scroll logic (prevented self-triggering manual override).
