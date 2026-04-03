@@ -1,3 +1,4 @@
+// v3.3.5 (2026-04-02 22:15 HST): Moved lyrics speed controls to sidebar for better accessibility.
 // v3.3.4 (2026-04-02 22:05 HST): Improved next/prev track logic and robustness when queue index is lost.
 // v3.3.3 (2026-04-02 21:55 HST): Improved auto-scroll reliability (switched to direct user input events).
 // v3.3.2 (2026-04-02 21:50 HST): Fixed setup widget interaction (pointer-events blocking).

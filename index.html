@@ -20,11 +20,6 @@
             <div id="lyrics-container">
                 <div id="lyrics-content">Loading lyrics...</div>
             </div>
-            <div class="tool-controls">
-                <button onclick="changeScrollSpeed(-25)" class="speed-btn">+</button>
-                <div class="speed-label"><span id="speed-indicator">150ms</span></div>
-                <button onclick="changeScrollSpeed(25)" class="speed-btn">-</button>
-            </div>
         </div>
 
         <!-- Search / Media Manager Panel -->
@@ -89,13 +84,21 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag">v3.3.4 (2026-04-02 22:05 HST)</div>
+        <div id="version-tag">v3.3.5 (2026-04-02 22:15 HST)</div>
         
         <!-- Sidebar -->
         <div id="sidebar">
             <div id="sidebar-top">
                 <div class="side-btn" id="btn-media-toggle" onclick="togglePanel('media')" title="Search">&#127911;</div>
                 <div class="side-btn" id="btn-lyrics-toggle" onclick="togglePanel('lyrics')" title="Lyrics" style="margin-top:20px;">🎤</div>
+                
+                <!-- Sidebar Speed Controls -->
+                <div id="sidebar-speed-controls">
+                    <button onclick="changeScrollSpeed(-25)" class="speed-btn small">+</button>
+                    <div id="speed-indicator">150ms</div>
+                    <button onclick="changeScrollSpeed(25)" class="speed-btn small">-</button>
+                </div>
+
                 <div class="side-btn" id="btn-manual-toggle" onclick="togglePanel('manual')" title="Manual" style="margin-top:20px;">📖</div>
             </div>
             <div id="sidebar-bottom">
