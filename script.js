@@ -1,3 +1,5 @@
+// v3.3.0 (2026-04-02 21:10 HST): Added ESLint and fixed linting warnings (empty catch blocks).
+// v3.2.9 (2026-04-02 20:53 HST): Fixed auto-scroll logic (prevented self-triggering manual override).
 // v3.2.8 (2026-04-02 09:20 HST): Fixed linting (missing var declarations) and ES5 compatibility.
 // v3.2.7 (2026-04-02 09:16 HST): Added manual scroll override for lyrics.
 // v3.2.6 (2026-04-02 01:17 HST): Fixed play/pause button icon update on state change.
@@ -16,6 +18,7 @@ var shadowPlayer = null;
 var shadowPlayerReady = false;
 var currentVideoId = "";
 var isManualScrolling = false;
+var isProgrammaticScroll = false;
 var manualScrollTimeout = null;
 
 // ── Panel Management ──
@@ -54,6 +57,7 @@ function initLyricsInteraction() {
     var container = document.getElementById('lyrics-container');
     if (!container) return;
     container.onscroll = function() {
+        if (isProgrammaticScroll) return;
         isManualScrolling = true;
         clearTimeout(manualScrollTimeout);
         manualScrollTimeout = setTimeout(function() {
@@ -164,7 +168,7 @@ function updateQueueList() {
                                     '<button onclick="removeFromQueue(\''+item.id+'\')" class="mini-btn" style="padding:5px;">DEL</button></div></div>';
                     list.appendChild(div);
                 }
-            } catch(e) {}
+            } catch(e) { /* ignore error */ }
         }
     };
     xhr.send();
@@ -311,7 +315,11 @@ function startLyricsScroll(noDelay) {
         if (!document.getElementById('panel-lyrics').classList.contains('active')) return;
         lyricsScrollInterval = setInterval(function() {
             if (!isManualScrolling) {
+                isProgrammaticScroll = true;
                 container.scrollTop += 1;
+                // Most browsers fire onscroll synchronously during the scrollTop update.
+                // Resetting it immediately after is safe for synchronous environments.
+                isProgrammaticScroll = false;
                 if (container.scrollTop + container.clientHeight >= container.scrollHeight) stopLyricsScroll();
             }
         }, scrollSpeed);
@@ -363,7 +371,7 @@ function removeFromQueue(videoId) {
 }
 
 function clearQueue() { localStorage.removeItem('kp_cached_queue'); updateQueueList(); }
-function idsInCurrentQueue() { try { var c = localStorage.getItem('kp_cached_queue'); if (c) return JSON.parse(c); } catch(e) {} return []; }
+function idsInCurrentQueue() { try { var c = localStorage.getItem('kp_cached_queue'); if (c) return JSON.parse(c); } catch(e) { /* ignore */ } return []; }
 
 function applySettings() {
     var savedKey = localStorage.getItem('yt_api_key');
@@ -429,7 +437,7 @@ function syncWeather() {
                 var d = JSON.parse(xhr.responseText);
                 var w = d.current_weather;
                 if (w) document.getElementById('weather').innerText = Math.round(w.temperature) + "°F " + (w.weathercode === 0 ? '☀️' : '🌤️');
-            } catch(e) {}
+            } catch(e) { /* ignore */ }
         }
     };
     xhr.send();

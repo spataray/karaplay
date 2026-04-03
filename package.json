@@ -1,0 +1,32 @@
+{
+  "name": "karaplay",
+  "version": "1.0.0",
+  "description": "A minimalist, car-optimized YouTube music player designed for Android infotainment systems and tablet displays. Karaplay prioritizes driver accessibility and continuous music flow with zero distractions.",
+  "main": "config.example.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "npm run lint:js && npm run lint:css",
+    "lint:js": "eslint script.js index.html setup.html",
+    "lint:css": "stylelint style.css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spataray/karaplay.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/spataray/karaplay/issues"
+  },
+  "homepage": "https://github.com/spataray/karaplay#readme",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.1.0",
+    "eslint-plugin-html": "^8.1.4",
+    "globals": "^17.4.0",
+    "stylelint": "^17.6.0",
+    "stylelint-config-standard": "^40.0.0"
+  }
+}
