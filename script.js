@@ -1,3 +1,4 @@
+// v3.3.4 (2026-04-02 22:05 HST): Improved next/prev track logic and robustness when queue index is lost.
 // v3.3.3 (2026-04-02 21:55 HST): Improved auto-scroll reliability (switched to direct user input events).
 // v3.3.2 (2026-04-02 21:50 HST): Fixed setup widget interaction (pointer-events blocking).
 // v3.3.1 (2026-04-02 21:32 HST): Improved input interactivity and pointer event handling for car screens.
@@ -336,18 +337,42 @@ function cleanTitle(title) {
 
 function nextTrack() {
     var ids = idsInCurrentQueue();
-    var cur = (player && player.getVideoData) ? player.getVideoData().video_id : "";
+    if (ids.length === 0) { 
+        if (player && player.nextVideo) player.nextVideo();
+        return;
+    }
+    var curData = (player && player.getVideoData) ? player.getVideoData() : null;
+    var cur = curData ? curData.video_id : "";
     var idx = ids.indexOf(cur);
-    if (idx !== -1 && idx + 1 < ids.length) player.loadVideoById(ids[idx + 1]);
-    else if (player && player.nextVideo) player.nextVideo();
+    console.log("NextTrack - Current:", cur, "Index:", idx, "Queue Size:", ids.length);
+    if (idx !== -1 && idx + 1 < ids.length) {
+        player.loadVideoById(ids[idx + 1]);
+    } else if (idx === -1 && ids.length > 0) {
+        player.loadVideoById(ids[0]);
+    } else if (player && player.nextVideo) {
+        player.nextVideo();
+    }
 }
 
 function prevTrack() {
     var ids = idsInCurrentQueue();
-    var cur = (player && player.getVideoData) ? player.getVideoData().video_id : "";
+    if (ids.length === 0) {
+        if (player && player.previousVideo) player.previousVideo();
+        return;
+    }
+    var curData = (player && player.getVideoData) ? player.getVideoData() : null;
+    var cur = curData ? curData.video_id : "";
     var idx = ids.indexOf(cur);
-    if (idx > 0) player.loadVideoById(ids[idx - 1]);
-    else if (player && player.previousVideo) player.previousVideo();
+    console.log("PrevTrack - Current:", cur, "Index:", idx);
+    if (idx > 0) {
+        player.loadVideoById(ids[idx - 1]);
+    } else if (idx === 0) {
+        player.seekTo(0); // Restart first track
+    } else if (ids.length > 0) {
+        player.loadVideoById(ids[0]);
+    } else if (player && player.previousVideo) {
+        player.previousVideo();
+    }
 }
 
 function togglePlay() { var s = player.getPlayerState(); if (s === 1) player.pauseVideo(); else player.playVideo(); }
