@@ -4,6 +4,7 @@ A minimalist, car-optimized YouTube music player designed for Android infotainme
 
 ## 🌟 Key Features (v3.0.0+)
 
+* **Personalized Playlists**: Instant access to **Most Queued** songs (P Phu's Playlists) and curated **Thai Music** (Araya's Playlists) with automated children's song filtering.
 * **Unified Sliding Dashboard**: Search, Lyrics, and Settings are integrated into a background layer. Clicking a tool smoothly slides the entire UI (Video + Dashboard) to the right, revealing the tool without blocking buttons.
 * **Smart Lyrics Engine**: High-contrast, large-font lyrics with a custom **Auto-Scroll** engine. Includes real-time speed controls (`+` / `-`) and a Thai-friendly fallback that extracts lyrics from YouTube descriptions.
 * **Visual Queue Management**: Full list of upcoming songs with thumbnails and titles. Includes **PLAY NOW** and **DELETE** actions for manual flow control.

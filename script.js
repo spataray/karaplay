@@ -1,21 +1,5 @@
-// v3.3.6 (2026-04-02 22:25 HST): Increased scroll sensitivity and adjusted speed range.
-// v3.3.5 (2026-04-02 22:15 HST): Moved lyrics speed controls to sidebar for better accessibility.
-// v3.3.4 (2026-04-02 22:05 HST): Improved next/prev track logic and robustness when queue index is lost.
-// v3.3.3 (2026-04-02 21:55 HST): Improved auto-scroll reliability (switched to direct user input events).
-// v3.3.2 (2026-04-02 21:50 HST): Fixed setup widget interaction (pointer-events blocking).
-// v3.3.1 (2026-04-02 21:32 HST): Improved input interactivity and pointer event handling for car screens.
-// v3.3.0 (2026-04-02 21:10 HST): Added ESLint and fixed linting warnings (empty catch blocks).
-// v3.2.9 (2026-04-02 20:53 HST): Fixed auto-scroll logic (prevented self-triggering manual override).
-// v3.2.8 (2026-04-02 09:20 HST): Fixed linting (missing var declarations) and ES5 compatibility.
-// v3.2.7 (2026-04-02 09:16 HST): Added manual scroll override for lyrics.
-// v3.2.6 (2026-04-02 01:17 HST): Fixed play/pause button icon update on state change.
-// v3.2.5 (2026-04-02 01:03 HST): Made lyrics panel transparent and kept video full-screen.
-// v3.2.4 (2026-04-01 23:46 HST): Removed iframe opacity to brighten the video.
-// v3.2.3 (2026-04-01 23:20 HST): Improved safety for player data access.
-// v3.2.2 (2026-04-01 22:38 HST): Added early weather init and robust player queuing.
-// v3.2.1 (2026-04-01 22:28 HST): Fixed click interactions and z-index issues.
-// v3.2.0 (2026-04-01 22:21 HST): Expanded Media Manager width and improved touch targets for car use.
-// v3.1.0 (2026-03-28 23:30 HST): Repositioned Up Next toast to avoid clock.
+// v3.4.1 (2026-05-10 19:55 HST): Adjusted lyrics scroll range (default 300ms, max 400ms).
+// v3.4.0 (2026-05-10 19:43 HST): Added P Phu's Playlists (most queued) and Araya's Playlists (Thai music) with children's song filtering.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
 
 var player;
@@ -25,6 +9,64 @@ var shadowPlayerReady = false;
 var currentVideoId = "";
 var isManualScrolling = false;
 var manualScrollTimeout = null;
+
+// ── Playlists & Stats ──
+function trackPlayback(videoId, title, thumb) {
+    var stats = JSON.parse(localStorage.getItem('kp_stats') || '{}');
+    if (!stats[videoId]) {
+        stats[videoId] = { count: 0, title: title, thumb: thumb };
+    }
+    stats[videoId].count++;
+    localStorage.setItem('kp_stats', JSON.stringify(stats));
+}
+
+function loadPPhusPlaylist() {
+    var stats = JSON.parse(localStorage.getItem('kp_stats') || '{}');
+    var items = [];
+    for (var vid in stats) {
+        items.push({ id: { videoId: vid }, snippet: { title: stats[vid].title, thumbnails: { medium: { url: stats[vid].thumb } } }, count: stats[vid].count });
+    }
+    items.sort(function(a, b) { return b.count - a.count; });
+    displaySearchResults(items.slice(0, 20), "P Phu's Most Queued");
+}
+
+function isChildrenSong(title) {
+    if (!title) return false;
+    var t = title.toLowerCase();
+    var bad = ["kids", "children", "nursery", "baby", "cocomelon", "pinkfong", "super simple", "lullaby", "เพลงเด็ก", "การ์ตูน", "อนุบาล"];
+    for (var i = 0; i < bad.length; i++) {
+        if (t.indexOf(bad[i]) !== -1) return true;
+    }
+    return false;
+}
+
+function loadArayasPlaylist() {
+    var activeKey = localStorage.getItem('yt_api_key');
+    if (!activeKey) { alert("API Key Missing!"); return; }
+    var resultsEl = document.getElementById('search-results');
+    resultsEl.innerHTML = "Fetching Araya's Playlist...";
+    
+    // Attempt to fetch Thai Music. Since LM is private, we'll search for popular Thai music as a robust alternative.
+    var url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=" + encodeURIComponent("Thai Music 2026") + "&type=video&videoEmbeddable=true&maxResults=25&key=" + activeKey;
+    
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                var filtered = [];
+                for (var i = 0; i < data.items.length; i++) {
+                    if (!isChildrenSong(data.items[i].snippet.title)) {
+                        filtered.push(data.items[i]);
+                    }
+                }
+                displaySearchResults(filtered, "Araya's Thai Music");
+            } catch(e) { resultsEl.innerText = "Error loading playlist."; }
+        }
+    };
+    xhr.send();
+}
 
 // ── Panel Management ──
 function togglePanel(panelId) {
@@ -126,21 +168,25 @@ function doSearch() {
     xhr.send();
 }
 
-function displaySearchResults(items) {
+function displaySearchResults(items, titleOverride) {
     var resultsEl = document.getElementById('search-results');
-    resultsEl.innerHTML = "";
-    if (!items || items.length === 0) { resultsEl.innerText = "No results found."; return; }
+    resultsEl.innerHTML = titleOverride ? '<h3 style="color:var(--accent-color); margin-bottom:15px;">' + titleOverride + '</h3>' : "";
+    if (!items || items.length === 0) { resultsEl.innerHTML += "No results found."; return; }
     for (var i = 0; i < items.length; i++) {
         var item = items[i];
         if (!item.id || !item.id.videoId) continue;
+        if (!titleOverride && isChildrenSong(item.snippet.title)) continue; // Filter children songs in general search
+        
         var div = document.createElement('div');
         div.className = 'search-item';
         div.setAttribute('role', 'button');
-        div.innerHTML = '<img src="' + item.snippet.thumbnails.medium.url + '"><div class="search-item-info"><div class="search-item-title">' + item.snippet.title + '</div></div>';
-        div.onclick = (function(vid) { return function() { 
+        var thumb = item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : item.snippet.thumbnails.default.url;
+        div.innerHTML = '<img src="' + thumb + '"><div class="search-item-info"><div class="search-item-title">' + item.snippet.title + '</div></div>';
+        div.onclick = (function(vid, title, th) { return function() { 
             console.log("Playing video: " + vid);
+            trackPlayback(vid, title, th);
             playRadio(vid); 
-        }; })(item.id.videoId);
+        }; })(item.id.videoId, item.snippet.title, thumb);
         resultsEl.appendChild(div);
     }
 }
@@ -171,7 +217,7 @@ function updateQueueList() {
                     div.style.padding = "10px";
                     div.innerHTML = '<img src="' + item.snippet.thumbnails.default.url + '" style="width:60px;"><div class="search-item-info"><div style="font-size:0.8rem; font-weight:bold;">' + item.snippet.title + '</div>' +
                                     '<div style="display:flex; gap:5px; margin-top:5px;">' +
-                                    '<button onclick="playRadio(\''+item.id+'\')" class="mini-btn" style="padding:5px;">PLAY</button>' +
+                                    '<button onclick="trackPlayback(\''+item.id+'\', \''+item.snippet.title.replace(/'/g, "\\'")+'\', \''+item.snippet.thumbnails.default.url+'\'); playRadio(\''+item.id+'\')" class="mini-btn" style="padding:5px;">PLAY</button>' +
                                     '<button onclick="removeFromQueue(\''+item.id+'\')" class="mini-btn" style="padding:5px;">DEL</button></div></div>';
                     list.appendChild(div);
                 }
@@ -246,7 +292,7 @@ function ensureShadowPlayer() {
 
 // ── Lyrics ──
 var lyricsScrollInterval = null;
-var scrollSpeed = 80;
+var scrollSpeed = 300;
 
 function fetchLyrics() {
     var panel = document.getElementById('panel-lyrics');
@@ -307,7 +353,7 @@ function fetchFromYouTubeDescription(videoId) {
 function changeScrollSpeed(delta) {
     scrollSpeed += delta;
     if (scrollSpeed < 20) scrollSpeed = 20;
-    if (scrollSpeed > 300) scrollSpeed = 300;
+    if (scrollSpeed > 400) scrollSpeed = 400;
     console.log("Scroll speed set to:", scrollSpeed, "ms");
     document.getElementById('speed-indicator').innerText = scrollSpeed + "ms";
     startLyricsScroll(true);

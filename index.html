@@ -25,6 +25,10 @@
         <!-- Search / Media Manager Panel -->
         <div id="panel-media" class="tool-panel">
             <h2 class="panel-title">Media Manager</h2>
+            <div style="display:flex; gap:15px; margin-bottom:20px;">
+                <button onclick="loadPPhusPlaylist()" class="gold-btn" style="flex:1; padding: 20px;">P Phu's Playlists</button>
+                <button onclick="loadArayasPlaylist()" class="gold-btn" style="flex:1; padding: 20px;">Araya's Playlists</button>
+            </div>
             <input type="search" id="search-input" placeholder="Search song or artist..." autocomplete="off" style="user-select:text !important; pointer-events:auto !important;">
             <div class="panel-split">
                 <div id="search-results"></div>
@@ -84,7 +88,7 @@
     <div id="ui-layer">
  
         <!-- Version Tag -->
-        <div id="version-tag">v3.3.6 (2026-04-02 22:25 HST)</div>
+        <div id="version-tag">v3.4.1 (2026-05-10 19:55 HST)</div>
         
         <!-- Sidebar -->
         <div id="sidebar">
@@ -95,7 +99,7 @@
                 <!-- Sidebar Speed Controls -->
                 <div id="sidebar-speed-controls">
                     <button onclick="changeScrollSpeed(-10)" class="speed-btn small">+</button>
-                    <div id="speed-indicator">80ms</div>
+                    <div id="speed-indicator">300ms</div>
                     <button onclick="changeScrollSpeed(10)" class="speed-btn small">-</button>
                 </div>
 
@@ -151,7 +155,7 @@
 
     </div>
 
-    <script src="script.js?v=3.2.8"></script>
+    <script src="script.js?v=3.4.1"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
