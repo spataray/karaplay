@@ -1,3 +1,4 @@
+// v3.4.2 (2026-05-22 21:47 HST): Added YouTube Premium sign-in button in Settings for ad-free playback.
 // v3.4.1 (2026-05-10 19:55 HST): Adjusted lyrics scroll range (default 300ms, max 400ms).
 // v3.4.0 (2026-05-10 19:43 HST): Added P Phu's Playlists (most queued) and Araya's Playlists (Thai music) with children's song filtering.
 // Karaplay - Main Logic (Legacy ES5 for Car Compatibility)
