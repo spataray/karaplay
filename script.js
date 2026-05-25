@@ -15,6 +15,15 @@ function getApiKey() {
     return localStorage.getItem('yt_api_key') || window.YT_API_KEY || "";
 }
 
+function shuffleArray(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+}
+
 // ── Playlists & Stats ──
 function trackPlayback(videoId, title, thumb) {
     var stats = JSON.parse(localStorage.getItem('kp_stats') || '{}');
@@ -26,13 +35,40 @@ function trackPlayback(videoId, title, thumb) {
 }
 
 function loadPPhusPlaylist() {
-    var stats = JSON.parse(localStorage.getItem('kp_stats') || '{}');
-    var items = [];
-    for (var vid in stats) {
-        items.push({ id: { videoId: vid }, snippet: { title: stats[vid].title, thumbnails: { medium: { url: stats[vid].thumb } } }, count: stats[vid].count });
-    }
-    items.sort(function(a, b) { return b.count - a.count; });
-    displaySearchResults(items.slice(0, 20), "P Phu's Most Queued");
+    var activeKey = getApiKey();
+    if (!activeKey) { alert("API Key Missing!"); return; }
+    var resultsEl = document.getElementById('search-results');
+    resultsEl.innerHTML = "Fetching P Phu's Rock & Alt...";
+    
+    var queries = [
+        "80s Classic Rock Hits",
+        "90s Alternative Rock Anthems",
+        "80s Rock Greatest Hits",
+        "90s Grunge Alternative",
+        "80s 90s Rock Music",
+        "90s Rock Hits"
+    ];
+    var q = queries[Math.floor(Math.random() * queries.length)];
+    var url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=" + encodeURIComponent(q) + "&type=video&videoEmbeddable=true&maxResults=50&key=" + activeKey;
+    
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                var items = [];
+                for (var i = 0; i < data.items.length; i++) {
+                    if (!isChildrenSong(data.items[i].snippet.title)) {
+                        items.push(data.items[i]);
+                    }
+                }
+                shuffleArray(items);
+                displaySearchResults(items, "P Phu's Rock & Alt");
+            } catch(e) { resultsEl.innerText = "Error loading playlist."; }
+        }
+    };
+    xhr.send();
 }
 
 function isChildrenSong(title) {
@@ -51,8 +87,16 @@ function loadArayasPlaylist() {
     var resultsEl = document.getElementById('search-results');
     resultsEl.innerHTML = "Fetching Araya's Playlist...";
     
-    // Attempt to fetch Thai Music. Since LM is private, we'll search for popular Thai music as a robust alternative.
-    var url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=" + encodeURIComponent("Thai Music 2026") + "&type=video&videoEmbeddable=true&maxResults=25&key=" + activeKey;
+    var queries = [
+        "Thai Music 2026",
+        "เพลงไทยยอดฮิต",
+        "Thai Pop Hits 2026",
+        "เพลงใหม่ล่าสุด 2026",
+        "Thai Indie Songs",
+        "เพลงฮิตในติ๊กต๊อก"
+    ];
+    var q = queries[Math.floor(Math.random() * queries.length)];
+    var url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=" + encodeURIComponent(q) + "&type=video&videoEmbeddable=true&maxResults=50&key=" + activeKey;
     
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -66,7 +110,8 @@ function loadArayasPlaylist() {
                         filtered.push(data.items[i]);
                     }
                 }
-                displaySearchResults(filtered, "Araya's Thai Music");
+                shuffleArray(filtered);
+                displaySearchResults(filtered, "Araya's Thai Hits");
             } catch(e) { resultsEl.innerText = "Error loading playlist."; }
         }
     };
