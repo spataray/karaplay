@@ -11,6 +11,10 @@ var currentVideoId = "";
 var isManualScrolling = false;
 var manualScrollTimeout = null;
 
+function getApiKey() {
+    return localStorage.getItem('yt_api_key') || window.YT_API_KEY || "";
+}
+
 // ── Playlists & Stats ──
 function trackPlayback(videoId, title, thumb) {
     var stats = JSON.parse(localStorage.getItem('kp_stats') || '{}');
@@ -42,7 +46,7 @@ function isChildrenSong(title) {
 }
 
 function loadArayasPlaylist() {
-    var activeKey = localStorage.getItem('yt_api_key');
+    var activeKey = getApiKey();
     if (!activeKey) { alert("API Key Missing!"); return; }
     var resultsEl = document.getElementById('search-results');
     resultsEl.innerHTML = "Fetching Araya's Playlist...";
@@ -151,7 +155,7 @@ function closeAllOverlays() {
 function doSearch() {
     var query = document.getElementById('search-input').value;
     if (!query) return;
-    var activeKey = localStorage.getItem('yt_api_key');
+    var activeKey = getApiKey();
     if (!activeKey) { alert("API Key Missing!"); return; }
     var resultsEl = document.getElementById('search-results');
     resultsEl.innerHTML = "Searching...";
@@ -198,7 +202,7 @@ function updateQueueList() {
     var ids = idsInCurrentQueue();
     list.innerHTML = "";
     if (ids.length === 0) { list.innerText = "Queue empty."; return; }
-    var activeKey = localStorage.getItem('yt_api_key');
+    var activeKey = getApiKey();
     if (!activeKey) { list.innerText = "Key needed."; return; }
     var currentId = (player && player.getVideoData) ? player.getVideoData().video_id : "";
     var idx = ids.indexOf(currentId);
@@ -330,7 +334,7 @@ function fetchLyrics() {
 
 function fetchFromYouTubeDescription(videoId) {
     var contentEl = document.getElementById('lyrics-content');
-    var activeKey = localStorage.getItem('yt_api_key');
+    var activeKey = getApiKey();
     var url = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + videoId + "&key=" + activeKey;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -449,7 +453,7 @@ function clearQueue() { localStorage.removeItem('kp_cached_queue'); updateQueueL
 function idsInCurrentQueue() { try { var c = localStorage.getItem('kp_cached_queue'); if (c) return JSON.parse(c); } catch(e) { /* ignore */ } return []; }
 
 function applySettings() {
-    var savedKey = localStorage.getItem('yt_api_key');
+    var savedKey = getApiKey();
     if (savedKey) {
         window.YT_API_KEY = savedKey;
         var kInput = document.getElementById('settings-api-key');
