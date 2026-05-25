@@ -278,6 +278,81 @@ function updateQueueList() {
 }
 
 // ── YouTube Engine ──
+var progressInterval = null;
+var toastShownThisVideo = false;
+var lastTrackId = "";
+
+function startProgressPoller() {
+    if (progressInterval) clearInterval(progressInterval);
+    progressInterval = setInterval(checkPlaybackProgress, 2000);
+}
+
+function stopProgressPoller() {
+    if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+    }
+}
+
+function checkPlaybackProgress() {
+    if (!player || typeof player.getDuration !== 'function' || typeof player.getCurrentTime !== 'function') return;
+    
+    var data = player.getVideoData();
+    var currentId = data ? data.video_id : "";
+    if (currentId !== lastTrackId) {
+        lastTrackId = currentId;
+        toastShownThisVideo = false;
+    }
+    
+    if (toastShownThisVideo) return;
+    
+    if (typeof player.getPlayerState === 'function' && player.getPlayerState() !== 1) return;
+    
+    var dur = player.getDuration();
+    var cur = player.getCurrentTime();
+    if (dur <= 0) return;
+    
+    var remaining = dur - cur;
+    if (remaining > 0 && remaining <= 60) {
+        toastShownThisVideo = true;
+        triggerUpNextToast(currentId);
+    }
+}
+
+function triggerUpNextToast(currentId) {
+    var ids = idsInCurrentQueue();
+    var idx = ids.indexOf(currentId);
+    if (idx === -1 || idx >= ids.length - 1) return;
+    
+    var nextId = ids[idx + 1];
+    var activeKey = getApiKey();
+    if (!activeKey) return;
+    
+    var url = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + nextId + "&key=" + activeKey;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                var d = JSON.parse(xhr.responseText);
+                if (d.items && d.items.length > 0) {
+                    var title = d.items[0].snippet.title;
+                    var toastEl = document.getElementById('up-next-toast');
+                    var toastTitleEl = document.getElementById('toast-title');
+                    if (toastEl && toastTitleEl) {
+                        toastTitleEl.innerText = title;
+                        toastEl.classList.add('active');
+                        setTimeout(function() {
+                            toastEl.classList.remove('active');
+                        }, 8000);
+                    }
+                }
+            } catch(e) { /* ignore error */ }
+        }
+    };
+    xhr.send();
+}
+
 function onYouTubeIframeAPIReady() {
     console.log("YouTube API Ready");
     player = new YT.Player('player', {
@@ -289,13 +364,20 @@ function onYouTubeIframeAPIReady() {
 }
 
 function onPlayerStateChange(event) {
-    if (event.data === 0) { setTimeout(function() { nextTrack(); }, 500); return; }
+    if (event.data === 0) { 
+        stopProgressPoller();
+        setTimeout(function() { nextTrack(); }, 500); 
+        return; 
+    }
     updateTrackInfo();
     if (event.data === 1) {
         var data = player.getVideoData();
         var videoId = data ? data.video_id : "";
         if (videoId) localStorage.setItem('kp_last_vid', videoId);
         if (document.getElementById('panel-lyrics').classList.contains('active')) { setTimeout(function() { fetchLyrics(); }, 2000); }
+        startProgressPoller();
+    } else {
+        stopProgressPoller();
     }
 }
 
@@ -504,16 +586,11 @@ function applySettings() {
         var kInput = document.getElementById('settings-api-key');
         if (kInput) kInput.value = savedKey;
     }
-    var orientation = localStorage.getItem('driverOrientation') || 'left';
-    if (orientation === 'right') document.getElementById('ui-layer').classList.add('driver-right');
     if (!savedKey) document.getElementById('setup-widget').style.display = 'block';
 }
 
 function toggleOrientation() {
-    var cur = localStorage.getItem('driverOrientation') || 'left';
-    var next = (cur === 'left') ? 'right' : 'left';
-    localStorage.setItem('driverOrientation', next);
-    window.location.reload();
+    alert("Driver Layout is now unified and centered for both driver and passenger access!");
 }
 
 function toggleApiKeyVisibility() {
