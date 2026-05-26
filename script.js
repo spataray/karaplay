@@ -466,8 +466,9 @@ function fetchLyrics() {
     var data = player.getVideoData();
     if (!data || !data.title) return;
     var contentEl = document.getElementById('lyrics-content');
-    contentEl.innerText = "Searching...";
+    contentEl.innerText = window.isArayaActive ? "กำลังค้นหาเนื้อเพลง..." : "Searching...";
     stopLyricsScroll();
+    
     var songTitle = cleanTitle(data.title);
     var artist = cleanTitle(data.author || "");
     if (data.title.indexOf(' - ') !== -1) {
@@ -475,7 +476,16 @@ function fetchLyrics() {
         artist = cleanTitle(parts[0]);
         songTitle = cleanTitle(parts[1]);
     }
-    var url = "https://api.lyrics.ovh/v1/" + encodeURIComponent(artist) + "/" + encodeURIComponent(songTitle);
+    
+    // Engine 1: LRCLIB (Primary - Best Hit Rate, Synchronized & Plain)
+    fetchFromLrcLib(songTitle, artist, data.video_id);
+}
+
+function fetchFromLrcLib(songTitle, artist, videoId) {
+    var contentEl = document.getElementById('lyrics-content');
+    var query = songTitle + " " + artist;
+    var url = "https://lrclib.net/api/search?q=" + encodeURIComponent(query);
+    
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.onreadystatechange = function() {
@@ -483,10 +493,56 @@ function fetchLyrics() {
             if (xhr.status === 200) {
                 try {
                     var resp = JSON.parse(xhr.responseText);
-                    if (resp.lyrics) { contentEl.innerText = resp.lyrics; startLyricsScroll(); }
-                    else { fetchFromYouTubeDescription(data.video_id); }
-                } catch(e) { fetchFromYouTubeDescription(data.video_id); }
-            } else { fetchFromYouTubeDescription(data.video_id); }
+                    var match = null;
+                    if (Array.isArray(resp)) {
+                        for (var i = 0; i < resp.length; i++) {
+                            if (resp[i].plainLyrics) {
+                                match = resp[i].plainLyrics;
+                                break;
+                            }
+                        }
+                    }
+                    if (match) {
+                        contentEl.innerText = match;
+                        startLyricsScroll();
+                    } else {
+                        // Fallback to Engine 2
+                        fetchFromLyricsOvh(songTitle, artist, videoId);
+                    }
+                } catch(e) {
+                    fetchFromLyricsOvh(songTitle, artist, videoId);
+                }
+            } else {
+                fetchFromLyricsOvh(songTitle, artist, videoId);
+            }
+        }
+    };
+    xhr.send();
+}
+
+function fetchFromLyricsOvh(songTitle, artist, videoId) {
+    var contentEl = document.getElementById('lyrics-content');
+    var url = "https://api.lyrics.ovh/v1/" + encodeURIComponent(artist) + "/" + encodeURIComponent(songTitle);
+    
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                try {
+                    var resp = JSON.parse(xhr.responseText);
+                    if (resp.lyrics) { 
+                        contentEl.innerText = resp.lyrics; 
+                        startLyricsScroll(); 
+                    } else { 
+                        fetchFromYouTubeDescription(videoId); 
+                    }
+                } catch(e) { 
+                    fetchFromYouTubeDescription(videoId); 
+                }
+            } else { 
+                fetchFromYouTubeDescription(videoId); 
+            }
         }
     };
     xhr.send();
@@ -503,13 +559,13 @@ function fetchFromYouTubeDescription(videoId) {
             try {
                 var d = JSON.parse(xhr.responseText);
                 var desc = d.items[0].snippet.description;
-                var markers = ["เนื้อเพลง", "Lyrics:", "Verse 1"];
+                var markers = ["เนื้อเพลง", "Lyrics:", "Lyrics", "Verse 1", "[Verse 1]", "คอร์ดเพลง", "LYRICS"];
                 for (var i=0; i<markers.length; i++) {
                     var idx = desc.indexOf(markers[i]);
                     if (idx !== -1) { contentEl.innerText = desc.substring(idx).trim(); startLyricsScroll(); return; }
                 }
-                contentEl.innerText = "Lyrics not found.";
-            } catch(e) { contentEl.innerText = "Lyrics not found."; }
+                contentEl.innerText = window.isArayaActive ? "ไม่พบเนื้อเพลง" : "Lyrics not found.";
+            } catch(e) { contentEl.innerText = window.isArayaActive ? "ไม่พบเนื้อเพลง" : "Lyrics not found."; }
         }
     };
     xhr.send();
