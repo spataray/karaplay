@@ -1,4 +1,4 @@
-/* Karaplay v3.5.1 (2026-05-25 14:25 HST) - Premium Floating Glass HUD Redesign */
+/* Karaplay v3.5.2 (2026-05-25 14:38 HST) - Repositioned Track Info & Random Drifting Toast */
 :root {
     --car-bg: #050505;
     --accent-color: #ffcc00;
@@ -91,13 +91,15 @@ iframe { width: 100%; height: 100%; border: none; opacity: 1; }
 }
 
 #track-info {
-    flex: 1; max-width: 30%; display: flex; flex-direction: column; justify-content: center;
+    position: absolute; top: 30px; left: 40px; width: 380px; z-index: 90;
+    display: flex; flex-direction: column; justify-content: center;
     background: rgb(10, 10, 10, 0.65);
     backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgb(255, 255, 255, 0.1);
     border-radius: 20px;
     box-shadow: 0 8px 32px 0 rgb(0, 0, 0, 0.37);
     padding: 15px 25px;
+    pointer-events: auto;
 }
 #track-title { font-size: 2.0rem; font-weight: 900; color: var(--accent-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #track-author { font-size: 1.2rem; opacity: 0.7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
@@ -111,7 +113,7 @@ iframe { width: 100%; height: 100%; border: none; opacity: 1; }
 
 /* Up Next - Sharp Gold Style */
 #up-next-toast {
-    position: absolute; top: 30%; right: 40px; width: 380px;
+    position: absolute; top: 140px; right: 40px; width: 380px;
     background: rgb(10, 10, 10, 0.65); color: var(--text-main);
     padding: 20px 30px; z-index: 200;
     backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -119,8 +121,70 @@ iframe { width: 100%; height: 100%; border: none; opacity: 1; }
     border-radius: 20px;
     transform: translateX(calc(100% + 60px)); transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     opacity: 0; box-shadow: 0 8px 32px 0 rgb(0, 0, 0, 0.37);
+    pointer-events: none;
 }
-#up-next-toast.active { opacity: 1; transform: translateX(0); }
+#up-next-toast.active { transition: none; }
+
+#up-next-toast.active.toast-heartbeat {
+    animation: toastHeartbeat 12s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+#up-next-toast.active.toast-feather {
+    animation: toastFeather 12s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+#up-next-toast.active.toast-wiggle {
+    animation: toastWiggle 12s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+@keyframes toastHeartbeat {
+    0% { transform: translateX(calc(100% + 60px)) scale(1); opacity: 0; top: 140px; pointer-events: none; }
+    10% { transform: translateX(0) scale(1); opacity: 1; top: 140px; pointer-events: auto; }
+    20% { transform: translateX(0) scale(1.05); opacity: 1; top: 22%; }
+    23% { transform: translateX(0) scale(1); opacity: 1; top: 25%; }
+    40% { transform: translateX(0) scale(1.05); opacity: 1; top: 40%; }
+    43% { transform: translateX(0) scale(1); opacity: 1; top: 43%; }
+    60% { transform: translateX(0) scale(1.05); opacity: 1; top: 60%; }
+    63% { transform: translateX(0) scale(1); opacity: 1; top: 63%; }
+    80% { transform: translateX(0) scale(1.05); opacity: 1; top: calc(100% - 320px); }
+    83% { transform: translateX(0) scale(1); opacity: 1; top: calc(100% - 320px); }
+    90% { transform: translateX(0) scale(1); opacity: 1; top: calc(100% - 320px); pointer-events: auto; }
+    100% { transform: translateX(calc(100% + 60px)) scale(1); opacity: 0; top: calc(100% - 320px); pointer-events: none; }
+}
+
+@keyframes toastFeather {
+    0% { transform: translateX(calc(100% + 60px)) rotate(0deg); opacity: 0; top: 140px; pointer-events: none; }
+    10% { transform: translateX(0) rotate(0deg); opacity: 1; top: 140px; pointer-events: auto; }
+    25% { transform: translateX(-20px) rotate(-4deg); opacity: 1; top: 25%; }
+    45% { transform: translateX(20px) rotate(4deg); opacity: 1; top: 45%; }
+    65% { transform: translateX(-20px) rotate(-3deg); opacity: 1; top: 65%; }
+    85% { transform: translateX(0) rotate(0deg); opacity: 1; top: calc(100% - 320px); }
+    90% { transform: translateX(0) rotate(0deg); opacity: 1; top: calc(100% - 320px); pointer-events: auto; }
+    100% { transform: translateX(calc(100% + 60px)) rotate(0deg); opacity: 0; top: calc(100% - 320px); pointer-events: none; }
+}
+
+@keyframes toastWiggle {
+    0% { transform: translateX(calc(100% + 60px)) rotate(0deg); opacity: 0; top: 140px; pointer-events: none; }
+    10% { transform: translateX(0) rotate(0deg); opacity: 1; top: 140px; pointer-events: auto; }
+    20% { transform: translateX(0) rotate(0deg); opacity: 1; top: 20%; }
+    22% { transform: translateX(0) rotate(-2deg); top: 22%; }
+    24% { transform: translateX(0) rotate(2deg); top: 24%; }
+    26% { transform: translateX(0) rotate(-2deg); top: 26%; }
+    28% { transform: translateX(0) rotate(0deg); top: 28%; }
+    45% { transform: translateX(0) rotate(0deg); opacity: 1; top: 45%; }
+    47% { transform: translateX(0) rotate(-2deg); top: 47%; }
+    49% { transform: translateX(0) rotate(2deg); top: 49%; }
+    51% { transform: translateX(0) rotate(-2deg); top: 51%; }
+    53% { transform: translateX(0) rotate(0deg); top: 53%; }
+    70% { transform: translateX(0) rotate(0deg); opacity: 1; top: 70%; }
+    72% { transform: translateX(0) rotate(-2deg); top: 72%; }
+    74% { transform: translateX(0) rotate(2deg); top: 74%; }
+    76% { transform: translateX(0) rotate(-2deg); top: 76%; }
+    78% { transform: translateX(0) rotate(0deg); top: 78%; }
+    85% { transform: translateX(0) rotate(0deg); opacity: 1; top: calc(100% - 320px); }
+    90% { transform: translateX(0) rotate(0deg); opacity: 1; top: calc(100% - 320px); pointer-events: auto; }
+    100% { transform: translateX(calc(100% + 60px)) rotate(0deg); opacity: 0; top: calc(100% - 320px); pointer-events: none; }
+}
 #toast-label { font-size: 0.8rem; font-weight: 900; letter-spacing: 2px; border-bottom: 2px solid rgb(255, 255, 255, 0.1); color: var(--accent-color); margin-bottom: 8px; padding-bottom: 4px; }
 #toast-title { font-size: 1.5rem; font-weight: 900; line-height: 1.2; color: var(--text-main); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 

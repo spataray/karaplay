@@ -374,10 +374,20 @@ function triggerUpNextToast(currentId) {
                     var toastTitleEl = document.getElementById('toast-title');
                     if (toastEl && toastTitleEl) {
                         toastTitleEl.innerText = title;
+                        
+                        // Select a creative drift animation effect at random
+                        var effects = ['toast-heartbeat', 'toast-wiggle', 'toast-feather'];
+                        var chosenEffect = effects[Math.floor(Math.random() * effects.length)];
+                        
+                        // Reset classes first to prevent piling up
+                        toastEl.classList.remove('toast-heartbeat', 'toast-wiggle', 'toast-feather');
+                        toastEl.classList.add(chosenEffect);
+                        
                         toastEl.classList.add('active');
                         setTimeout(function() {
                             toastEl.classList.remove('active');
-                        }, 8000);
+                            toastEl.classList.remove('toast-heartbeat', 'toast-wiggle', 'toast-feather');
+                        }, 12000);
                     }
                 }
             } catch(e) { /* ignore error */ }

@@ -106,7 +106,7 @@
     <div id="ui-layer">
   
         <!-- Version Tag -->
-        <div id="version-tag">v3.5.1 (2026-05-25 14:25 HST)</div>
+        <div id="version-tag">v3.5.2 (2026-05-25 14:38 HST)</div>
         
         <!-- Sliding Content Wrapper -->
         <div id="content-wrapper">
@@ -114,6 +114,12 @@
             <div id="dashboard">
                 <div id="clock">00:00 AM</div>
                 <div id="weather">--°F</div>
+            </div>
+
+            <!-- Floating Current Track Info (Top Left Pinned, floats over video) -->
+            <div id="track-info">
+                <div id="track-title">Ready to Play</div>
+                <div id="track-author">Select a song to start</div>
             </div>
 
             <!-- Integrated Setup Widget -->
@@ -140,11 +146,8 @@
 
         <!-- Persistent Bottom Navigation & Media Bar -->
         <div id="bottom-bar">
-            <!-- Left Section: Track Metadata -->
-            <div id="track-info">
-                <div id="track-title">Ready to Play</div>
-                <div id="track-author">Select a song to start</div>
-            </div>
+            <!-- Left Spacer (balances Right Controls for perfect center alignment) -->
+            <div id="bottom-left-spacer" style="flex: 1; max-width: 25%;"></div>
 
             <!-- Center Section: Media Controls & Primary Tabs -->
             <div id="center-controls">
@@ -166,7 +169,7 @@
     </div>
 
     <script src="config.js"></script>
-    <script src="script.js?v=3.5.1"></script>
+    <script src="script.js?v=3.5.2"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
