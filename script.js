@@ -7,9 +7,9 @@ var player;
 var playerReady = false;
 var shadowPlayer = null;
 var shadowPlayerReady = false;
-var currentVideoId = "";
 var isManualScrolling = false;
 var manualScrollTimeout = null;
+var isArayaActive = false;
 
 function getApiKey() {
     return localStorage.getItem('yt_api_key') || window.YT_API_KEY || "";
@@ -85,7 +85,7 @@ function loadArayasPlaylist() {
     var activeKey = getApiKey();
     if (!activeKey) { alert("API Key Missing!"); return; }
     var resultsEl = document.getElementById('search-results');
-    resultsEl.innerHTML = "Fetching Araya's Playlist...";
+    resultsEl.innerHTML = "กำลังดึงข้อมูลเพลงโปรดของอารยา...";
     
     var queries = [
         "Thai Music 2026",
@@ -111,7 +111,7 @@ function loadArayasPlaylist() {
                     }
                 }
                 shuffleArray(filtered);
-                displaySearchResults(filtered, "Araya's Thai Hits");
+                displaySearchResults(filtered, "เพลงไทยของอารยา 🇹🇭");
             } catch(e) { resultsEl.innerText = "Error loading playlist."; }
         }
     };
@@ -121,6 +121,9 @@ function loadArayasPlaylist() {
 // ── Panel Management ──
 function togglePanel(panelId) {
     var body = document.body;
+    body.classList.remove('right-align');
+    window.isArayaActive = false;
+    
     var targetPanel = document.getElementById('panel-' + panelId);
     var targetBtn = document.getElementById('btn-' + panelId + '-toggle');
     var isActive = targetPanel && targetPanel.classList.contains('active');
@@ -128,7 +131,7 @@ function togglePanel(panelId) {
     // Close everything
     var allPanels = document.querySelectorAll('.tool-panel');
     for (var i = 0; i < allPanels.length; i++) allPanels[i].classList.remove('active');
-    var allBtns = document.querySelectorAll('.side-btn');
+    var allBtns = document.querySelectorAll('.control-btn');
     for (var j = 0; j < allBtns.length; j++) allBtns[j].classList.remove('active');
     body.classList.remove('panel-open', 'lyrics-open');
     stopLyricsScroll();
@@ -147,6 +150,34 @@ function togglePanel(panelId) {
         if (panelId === 'media') updateQueueList();
         if (panelId === 'manual') fetchReadme();
         if (panelId === 'settings') applySettings(); // Ensure key loads when opening
+    }
+}
+
+function toggleArayasPanel() {
+    var body = document.body;
+    var isMediaActive = document.getElementById('panel-media').classList.contains('active');
+    var isRightAligned = body.classList.contains('right-align');
+    
+    if (isMediaActive && isRightAligned) {
+        togglePanel('media');
+        body.classList.remove('right-align');
+        window.isArayaActive = false;
+        updateQueueList();
+    } else {
+        body.classList.add('right-align');
+        window.isArayaActive = true;
+        
+        // Open the media panel on the right
+        var allPanels = document.querySelectorAll('.tool-panel');
+        for (var i = 0; i < allPanels.length; i++) allPanels[i].classList.remove('active');
+        var allBtns = document.querySelectorAll('.control-btn');
+        for (var j = 0; j < allBtns.length; j++) allBtns[j].classList.remove('active');
+        
+        document.getElementById('panel-media').classList.add('active');
+        document.getElementById('btn-araya-toggle').classList.add('active');
+        body.classList.add('panel-open');
+        
+        loadArayasPlaylist();
     }
 }
 
@@ -246,13 +277,13 @@ function updateQueueList() {
     if (!list) return;
     var ids = idsInCurrentQueue();
     list.innerHTML = "";
-    if (ids.length === 0) { list.innerText = "Queue empty."; return; }
+    if (ids.length === 0) { list.innerText = window.isArayaActive ? "ไม่มีเพลงในคิว" : "Queue empty."; return; }
     var activeKey = getApiKey();
-    if (!activeKey) { list.innerText = "Key needed."; return; }
+    if (!activeKey) { list.innerText = window.isArayaActive ? "ต้องการคีย์ API" : "Key needed."; return; }
     var currentId = (player && player.getVideoData) ? player.getVideoData().video_id : "";
     var idx = ids.indexOf(currentId);
     var future = ids.slice(idx + 1, idx + 11);
-    if (future.length === 0) { list.innerHTML = "<div style='opacity:0.5; padding:10px;'>No upcoming songs</div>"; return; }
+    if (future.length === 0) { list.innerHTML = "<div style='opacity:0.5; padding:10px;'>" + (window.isArayaActive ? "ไม่มีเพลงถัดไป" : "No upcoming songs") + "</div>"; return; }
     var url = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + future.join(',') + "&key=" + activeKey;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -265,10 +296,12 @@ function updateQueueList() {
                     var div = document.createElement('div');
                     div.className = 'search-item';
                     div.style.padding = "10px";
+                    var playLabel = window.isArayaActive ? "เล่น" : "PLAY";
+                    var delLabel = window.isArayaActive ? "ลบ" : "DEL";
                     div.innerHTML = '<img src="' + item.snippet.thumbnails.default.url + '" style="width:60px;"><div class="search-item-info"><div style="font-size:0.8rem; font-weight:bold;">' + item.snippet.title + '</div>' +
                                     '<div style="display:flex; gap:5px; margin-top:5px;">' +
-                                    '<button onclick="trackPlayback(\''+item.id+'\', \''+item.snippet.title.replace(/'/g, "\\'")+'\', \''+item.snippet.thumbnails.default.url+'\'); playRadio(\''+item.id+'\')" class="mini-btn" style="padding:5px;">PLAY</button>' +
-                                    '<button onclick="removeFromQueue(\''+item.id+'\')" class="mini-btn" style="padding:5px;">DEL</button></div></div>';
+                                    '<button onclick="trackPlayback(\''+item.id+'\', \''+item.snippet.title.replace(/'/g, "\\'")+'\', \''+item.snippet.thumbnails.default.url+'\'); playRadio(\''+item.id+'\')" class="mini-btn" style="padding:5px;">' + playLabel + '</button>' +
+                                    '<button onclick="removeFromQueue(\''+item.id+'\')" class="mini-btn" style="padding:5px;">' + delLabel + '</button></div></div>';
                     list.appendChild(div);
                 }
             } catch(e) { /* ignore error */ }

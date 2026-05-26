@@ -178,3 +178,21 @@ input[type="search"], input[type="password"] { width: 100%; padding: 15px; backg
 
 #version-tag { position: fixed; bottom: 130px; left: 20px; font-size: 12px; color: rgb(255,255,255,0.35); z-index: 1000; font-family: monospace; pointer-events: none; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Passenger Side (Right-Aligned) Layout Overrides */
+body.right-align #tools-layer {
+    left: auto;
+    right: 0;
+}
+body.right-align .tool-panel {
+    border-right: none;
+    border-left: 1px solid rgb(255, 255, 255, 0.1);
+    background: linear-gradient(to left, rgb(0,0,0,0.96), rgb(0,0,0,0.7));
+}
+body.right-align.panel-open #player-container {
+    left: 0;
+    width: calc(100% - var(--panel-width));
+}
+body.right-align.panel-open #content-wrapper {
+    transform: translateX(calc(-1 * var(--panel-width)));
+}
