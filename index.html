@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Karaplay</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=3.10.0">
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
@@ -31,21 +31,9 @@
 
         <!-- Search / Media Manager Panel -->
         <div id="panel-media" class="tool-panel">
-            <h2 class="panel-title">Media Manager</h2>
-            <div style="display:flex; gap:15px; margin-bottom:20px;">
-                <button onclick="loadPPhusPlaylist()" class="gold-btn" style="flex:1; padding: 20px;">P Phu's Rock & Alt</button>
-                <button onclick="loadArayasPlaylist()" class="gold-btn" style="flex:1; padding: 20px;">Araya's Thai Hits</button>
-            </div>
             <input type="search" id="search-input" placeholder="Search song or artist..." autocomplete="off" style="user-select:text !important; pointer-events:auto !important;">
             <div class="panel-split">
                 <div id="search-results"></div>
-                <div id="queue-side">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <span style="font-weight:bold; color:var(--accent-color);">UP NEXT</span>
-                        <button onclick="clearQueue()" class="mini-btn">CLEAR</button>
-                    </div>
-                    <div id="queue-list"></div>
-                </div>
             </div>
         </div>
 
@@ -102,11 +90,49 @@
         <div id="shadow-player"></div>
     </div>
 
+    <!-- Right Slide-out Karaoke Overlay -->
+    <div id="right-karaoke-overlay">
+        <!-- Karaoke Handle Tab (Above Queue Handle) -->
+        <div id="right-karaoke-handle" onclick="toggleRightKaraoke()">
+            <span class="handle-icon">🎤</span>
+            <span class="handle-text-eng">SING</span>
+            <span class="handle-text-thai">ร้องเพลง</span>
+        </div>
+        <div id="right-karaoke-content">
+            <div class="right-karaoke-header">
+                <span class="right-karaoke-title">ร้องคาราโอเกะ</span>
+            </div>
+            <div class="right-karaoke-search-container" style="display:flex; gap:10px; margin-bottom:15px;">
+                <input type="search" id="right-karaoke-input" placeholder="ค้นหาเพลงคาราโอเกะ..." autocomplete="off" style="flex:1; user-select:text !important; pointer-events:auto !important; margin-bottom:0; font-size:1.1rem; padding:12px; border-radius:10px; border:1px solid #444;">
+                <button id="btn-right-karaoke-search" onclick="performRightKaraokeSearch()" class="gold-btn" style="padding: 10px 15px; border-radius:10px; font-size:1.1rem;">ค้นหา</button>
+            </div>
+            <div id="right-karaoke-list"></div>
+        </div>
+    </div>
+
+    <!-- Right Slide-out Upcoming Overlay -->
+    <div id="right-queue-overlay">
+        <div id="right-queue-handle" onclick="toggleRightQueue()">
+            <span class="handle-arrow">◀</span>
+            <span class="handle-text-eng">QUEUE</span>
+            <span class="handle-text-thai">คิว</span>
+        </div>
+        <div id="right-queue-content">
+            <div class="right-queue-header">
+                <span class="right-queue-title">คิวเพลงถัดไป</span>
+            </div>
+            <div id="right-queue-list"></div>
+            <div id="right-queue-footer">
+                <button id="btn-load-more-queue" onclick="loadMoreQueue()" class="gold-btn" style="width:100%; padding:15px; border-radius:12px;">LOAD NEXT 20</button>
+            </div>
+        </div>
+    </div>
+
     <!-- [LAYER 3] Main UI Layer -->
     <div id="ui-layer">
   
         <!-- Version Tag -->
-        <div id="version-tag">v3.5.2 (2026-05-25 14:38 HST)</div>
+        <div id="version-tag">v3.10.0 (2026-06-14 23:28 HST)</div>
         
         <!-- Sliding Content Wrapper -->
         <div id="content-wrapper">
@@ -144,16 +170,19 @@
             </div>
         </div>
 
+
         <!-- Persistent Bottom Navigation & Media Bar -->
         <div id="bottom-bar">
-            <!-- Left Spacer (balances Right Controls for perfect center alignment) -->
-            <div id="bottom-left-spacer" style="flex: 1; max-width: 25%;"></div>
+            <!-- Left Section: P Phu's Playlist Toggle & System Controls -->
+            <div id="left-controls" style="flex: 1; max-width: 25%; display: flex; align-items: center; justify-content: flex-start; gap: 15px;">
+                <button class="control-btn main-tab" id="btn-pphu-toggle" onclick="togglePPhusPanel()" title="P Phu's Songs" style="width:auto; padding:0 20px; font-size:1.2rem; font-weight:bold; color:var(--accent-color); border-radius:30px;">P Phu's Songs 🎸</button>
+                <button class="control-btn" id="btn-fullscreen-toggle" onclick="toggleFullscreen()" title="Fullscreen" style="font-size: 1.6rem;">⛶</button>
+            </div>
 
             <!-- Center Section: Media Controls & Primary Tabs -->
             <div id="center-controls">
                 <button class="control-btn" onclick="prevTrack()" title="Previous">&#9198;</button>
                 <button class="control-btn play-btn" id="sidebar-btn-play" onclick="togglePlay()" title="Play/Pause">&#9654;</button>
-                <button class="control-btn main-tab" id="btn-media-toggle" onclick="togglePanel('media')" title="Search">&#127911;</button>
                 <button class="control-btn main-tab" id="btn-lyrics-toggle" onclick="togglePanel('lyrics')" title="Lyrics">🎤</button>
                 <button class="control-btn" onclick="nextTrack()" title="Next">&#9197;</button>
             </div>
@@ -169,7 +198,7 @@
     </div>
 
     <script src="config.js"></script>
-    <script src="script.js?v=3.5.2"></script>
+    <script src="script.js?v=3.10.0"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>

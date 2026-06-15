@@ -8,7 +8,10 @@ A minimalist, car-optimized YouTube music player designed for Android infotainme
 * **Unified Sliding Dashboard**: Search, Lyrics, and Settings are integrated into a background layer. Clicking a tool smoothly slides the entire UI (Video + Dashboard) to the right, revealing the tool without blocking buttons.
 * **Smart Lyrics Engine**: High-contrast, large-font lyrics with a custom **Auto-Scroll** engine. Includes real-time speed controls (`+` / `-`) and a Thai-friendly fallback that extracts lyrics from YouTube descriptions.
 * **Visual Queue Management**: Full list of upcoming songs with thumbnails and titles. Includes **PLAY NOW** and **DELETE** actions for manual flow control.
+* **Draggable Track Banner**: Touch/mouse draggable currently playing song banner with persistence.
 * **Driver-Centric UI**: Oversized controls on the driver side, supporting both LHD (Left) and RHD (Right) orientations.
+* **Fullscreen Mode**: Legacy-compatible see-through fullscreen toggle (`⛶`) situated next to P Phu's song button for standard browser views.
+* **YouTube Premium Integration**: Support for signing in directly via settings to enable ad-free playback.
 * **Mobile-First Setup**: Guided setup via QR code. Scan with a phone to generate an API key and sync it to the car instantly via browser history.
 * **Dashboard Integration**: Large digital clock and live weather updates (Open-Meteo API).
 * **Legacy Compatibility**: Written in ES5 JavaScript for maximum compatibility with older Android head units.
@@ -37,4 +40,4 @@ A minimalist, car-optimized YouTube music player designed for Android infotainme
 3. **Settings (⚙️)**: Toggle driver orientation and manage your API keys.
 
 ---
-*Part of the T.A. Station Digital Signage ecosystem. v3.0.4 (2026-03-28)*
+*Part of the T.A. Station Digital Signage ecosystem. v3.10.0 (2026-06-14)*
